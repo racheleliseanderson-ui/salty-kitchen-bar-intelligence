@@ -201,7 +201,6 @@ function VisionPage() {
           </p>
         </div>
 
-        {/* Step indicator */}
         <ol className="mt-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide">
           {(
             [
@@ -213,7 +212,7 @@ function VisionPage() {
             <li
               key={id}
               className={cn(
-                "rounded-pill border px-3 py-1.5",
+                "rounded-full border px-3 py-1.5",
                 step === id
                   ? "border-heritage bg-navy-100 text-heritage"
                   : "border-line text-muted",
@@ -295,9 +294,9 @@ function VisionPage() {
                     className={cn(
                       "tabular text-sm",
                       det.confidence >= 0.8
-                        ? "text-ok"
+                        ? "text-[var(--color-ok)]"
                         : det.confidence < 0.7
-                          ? "text-warn"
+                          ? "text-[var(--color-warn)]"
                           : "text-muted",
                     )}
                   >
