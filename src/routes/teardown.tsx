@@ -50,6 +50,19 @@ function TeardownPage() {
           <article key={c.id} className="panel-surface p-5">
             <p className="section-label">{c.role}</p>
             <h2 className="mt-1 font-display text-2xl">{c.name}</h2>
+            {c.url ? (
+              <p className="mt-2 text-xs text-stone">
+                <a
+                  href={c.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-line underline-offset-2 hover:text-heritage"
+                >
+                  Primary source
+                </a>
+                {c.sourceNote ? <span className="text-stone"> — {c.sourceNote}</span> : null}
+              </p>
+            ) : null}
             <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-stone">Strengths</p>
             <ul className="mt-2 space-y-1.5 text-sm text-stone-deep">
               {c.strengths.map((s) => (
