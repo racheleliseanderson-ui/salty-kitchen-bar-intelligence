@@ -406,7 +406,8 @@ function RankPanel({ breakdown, composite }: { breakdown: RankBreakdown; composi
           <span className="font-medium">
             {breakdown.flavor.topPair.a} + {breakdown.flavor.topPair.b}
           </span>{" "}
-          ({breakdown.flavor.topPair.score.toFixed(2)} hybrid score)
+          ({breakdown.flavor.topPair.score.toFixed(2)} · co {breakdown.flavor.topPair.cooccurrence.toFixed(2)} · mol{" "}
+          {breakdown.flavor.topPair.molecular.toFixed(2)})
         </p>
       ) : null}
       {breakdown.expiry.items.length > 0 ? (

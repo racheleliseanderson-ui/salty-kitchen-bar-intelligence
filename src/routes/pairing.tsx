@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { IngredientPicker } from "@/components/kbi/IngredientPicker";
 import { PageHeader } from "@/components/kbi/PageHeader";
 import { METHOD_NOTES, PAIRING_SOURCES } from "@/lib/kbi/report";
 import {
@@ -9,6 +10,7 @@ import {
   SYNERGY,
   COMPOUND_NOTES,
   FEATURED_BRIDGES,
+  UNEXPECTED_BRIDGES,
   bestPairsFor,
   pairScore,
   rankInventoryPairs,
@@ -19,14 +21,12 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/pairing")({ component: PairingPage });
 
-type Mode = "explorer" | "inventory" | "bridges";
+type Mode = "explorer" | "inventory" | "bridges" | "unexpected";
 
 function PairingPage() {
   const [mode, setMode] = useState<Mode>("explorer");
   const [a, setA] = useState("bourbon");
   const [b, setB] = useState("sweet vermouth");
-  const [filterA, setFilterA] = useState("");
-  const [filterB, setFilterB] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const items = useInventory((s) => s.items);
 
@@ -43,28 +43,6 @@ function PairingPage() {
   const pb = PROFILES.find((p) => p.name === b);
   const narrative = useMemo(() => explainPair(score), [score]);
 
-  const filteredA = useMemo(() => {
-    const q = filterA.trim().toLowerCase();
-    if (!q) return PROFILES;
-    return PROFILES.filter(
-      (p) =>
-        p.displayName.toLowerCase().includes(q) ||
-        p.name.includes(q) ||
-        p.category.includes(q),
-    );
-  }, [filterA]);
-
-  const filteredB = useMemo(() => {
-    const q = filterB.trim().toLowerCase();
-    if (!q) return PROFILES;
-    return PROFILES.filter(
-      (p) =>
-        p.displayName.toLowerCase().includes(q) ||
-        p.name.includes(q) ||
-        p.category.includes(q),
-    );
-  }, [filterB]);
-
   const categories = useMemo(() => {
     return [...new Set(PROFILES.map((p) => p.category))].sort();
   }, []);
@@ -80,23 +58,19 @@ function PairingPage() {
       <PageHeader
         kicker="02 · Pairing data"
         title="A hybrid molecular + co-occurrence engine can be bootstrapped now."
-        lede="Curated profiles stand in for FlavorDB / FooDB vectors. The formula is fixed: Jaccard on volatiles, blended with recipe co-occurrence, plus a synergy bonus only when both sides are already elevated. Explore pairs, rank against your inventory, or jump into high-signal bridges."
+        lede="Curated profiles stand in for FlavorDB / FooDB vectors. Type an ingredient to filter and select in one step. Explore pairs, rank against inventory, jump into classics, or hunt unexpected chemical bridges."
       />
 
       <div className="panel-inset flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-sm text-stone-deep">
         <span>
-          <span className="font-semibold text-navy-700">Data version</span>{" "}
-          {DATA_VERSION}
+          <span className="font-semibold text-navy-700">Data version</span> {DATA_VERSION}
         </span>
         <span className="text-muted">·</span>
         <span>
-          <span className="font-semibold text-navy-700">Last reviewed</span>{" "}
-          {LAST_REVIEWED}
+          <span className="font-semibold text-navy-700">Last reviewed</span> {LAST_REVIEWED}
         </span>
         <span className="text-muted">·</span>
-        <span>
-          Educational curated subset — not a live or licensed FlavorDB / FooDB extract.
-        </span>
+        <span>Educational curated subset — not a live or licensed FlavorDB / FooDB extract.</span>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -114,6 +88,7 @@ function PairingPage() {
             ["explorer", "Pair explorer"],
             ["inventory", "Against inventory"],
             ["bridges", "Featured bridges"],
+            ["unexpected", "Unexpected bridges"],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -151,18 +126,48 @@ function PairingPage() {
                     {da} <span className="text-muted">×</span> {db}
                   </p>
                   <p className="mt-1 text-sm text-stone-deep">{br.hook}</p>
-                  <div className="mt-3 flex items-center gap-3 text-xs">
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                     <span className="badge badge-comfortable tabular">{s.composite.toFixed(2)}</span>
                     <span className="text-muted">
                       mol {s.molecular.toFixed(2)} · co {s.cooccurrence.toFixed(2)}
                     </span>
-                    {s.synergyApplied && (
-                      <span className="badge badge-rising">synergy</span>
-                    )}
+                    {s.synergyApplied && <span className="badge badge-rising">synergy</span>}
                   </div>
                 </button>
               );
             })}
+          </div>
+        </section>
+      )}
+
+      {mode === "unexpected" && (
+        <section className="panel-surface p-5 sm:p-6">
+          <p className="section-label">Unexpected bridges</p>
+          <h2 className="mt-1 font-display text-2xl">High chemistry, thin recipe corpus</h2>
+          <p className="mt-2 text-sm text-stone-deep">
+            Molecular Jaccard ≥ 0.25 with co-occurrence still below 0.40. These are deliberate experiments — the
+            chemistry agrees more than published recipes do. Tap to inspect the pair.
+          </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {UNEXPECTED_BRIDGES.map((br) => (
+              <button
+                key={`${br.a}-${br.b}`}
+                type="button"
+                className="panel-inset p-4 text-left transition hover:border-heritage hover:bg-navy-100/40"
+                onClick={() => pickBridge(br.a, br.b)}
+              >
+                <p className="font-display text-lg">
+                  {br.displayA} <span className="text-muted">×</span> {br.displayB}
+                </p>
+                <p className="mt-1 text-sm text-stone-deep">
+                  Gap {br.gap.toFixed(2)} — shared {br.shared.slice(0, 3).join(", ") || "volatiles"}
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                  <span className="badge badge-rising tabular">mol {br.molecular.toFixed(2)}</span>
+                  <span className="badge badge-neutral tabular">co {br.cooccurrence.toFixed(2)}</span>
+                </div>
+              </button>
+            ))}
           </div>
         </section>
       )}
@@ -172,21 +177,7 @@ function PairingPage() {
           <p className="section-label">Against inventory</p>
           <h2 className="mt-1 font-display text-2xl">What in the house pairs with…</h2>
           <div className="mt-4 max-w-sm">
-            <label className="text-sm font-semibold">
-              Focal ingredient
-              <select
-                className="field-input mt-1"
-                value={a}
-                onChange={(e) => setA(e.target.value)}
-              >
-                {PROFILES.map((p) => (
-                  <option key={p.name} value={p.name}>
-                    {p.displayName}
-                    {p.coverage === "sparse" ? " (sparse)" : ""}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <IngredientPicker id="inv-focal" label="Focal ingredient" value={a} onChange={setA} />
           </div>
           {items.length === 0 ? (
             <p className="mt-4 text-sm text-muted">
@@ -206,7 +197,7 @@ function PairingPage() {
                 <li key={n.b}>
                   <button
                     type="button"
-                    className="flex w-full items-center justify-between gap-3 rounded-md px-3 py-2.5 text-left text-sm hover:bg-ivory"
+                    className="flex min-h-11 w-full items-center justify-between gap-3 rounded-md px-3 py-2.5 text-left text-sm hover:bg-ivory"
                     onClick={() => {
                       setB(n.b);
                       setMode("explorer");
@@ -217,9 +208,7 @@ function PairingPage() {
                       <span className="ml-2 text-xs text-muted">{n.category}</span>
                     </span>
                     <span className="flex shrink-0 items-center gap-2">
-                      {n.synergyApplied && (
-                        <span className="badge badge-rising">synergy</span>
-                      )}
+                      {n.synergyApplied && <span className="badge badge-rising">synergy</span>}
                       <span className="tabular text-muted">{n.composite.toFixed(2)}</span>
                     </span>
                   </button>
@@ -238,50 +227,8 @@ function PairingPage() {
           <p className="section-label">Explorer</p>
           <h2 className="mt-1 font-display text-2xl">Why this pairs</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <label className="text-sm font-semibold">
-              Ingredient A
-              <input
-                className="field-input mt-1"
-                placeholder="Filter…"
-                value={filterA}
-                onChange={(e) => setFilterA(e.target.value)}
-                aria-label="Filter ingredient A"
-              />
-              <select
-                className="field-input mt-2"
-                value={a}
-                onChange={(e) => setA(e.target.value)}
-              >
-                {filteredA.map((p) => (
-                  <option key={p.name} value={p.name}>
-                    {p.displayName}
-                    {p.coverage === "sparse" ? " (sparse)" : ""}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="text-sm font-semibold">
-              Ingredient B
-              <input
-                className="field-input mt-1"
-                placeholder="Filter…"
-                value={filterB}
-                onChange={(e) => setFilterB(e.target.value)}
-                aria-label="Filter ingredient B"
-              />
-              <select
-                className="field-input mt-2"
-                value={b}
-                onChange={(e) => setB(e.target.value)}
-              >
-                {filteredB.map((p) => (
-                  <option key={p.name} value={p.name}>
-                    {p.displayName}
-                    {p.coverage === "sparse" ? " (sparse)" : ""}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <IngredientPicker id="pair-a" label="Ingredient A" value={a} onChange={setA} />
+            <IngredientPicker id="pair-b" label="Ingredient B" value={b} onChange={setB} />
           </div>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -295,22 +242,14 @@ function PairingPage() {
               <span className="font-semibold text-navy-700">Why</span> {narrative}
             </p>
             <p>
-              <span className="font-semibold text-navy-700">Synergy gate</span>{" "}
-              +{SYNERGY.bonus.toFixed(2)} only when Molecular Jaccard &gt;{" "}
-              {SYNERGY.molecularMin} <span className="text-muted">and</span> Recipe
-              co-occurrence &gt; {SYNERGY.coMin}. Never invents a pair from one signal alone.
+              <span className="font-semibold text-navy-700">Synergy gate</span> +{SYNERGY.bonus.toFixed(2)} only
+              when Molecular Jaccard {'>'} {SYNERGY.molecularMin} <span className="text-muted">and</span> Recipe
+              co-occurrence {'>'} {SYNERGY.coMin}. Never invents a pair from one signal alone.
             </p>
             <p>
               Bonus on this pair:{" "}
-              <span
-                className={cn(
-                  "font-semibold",
-                  score.synergyApplied ? "text-heritage" : "text-muted",
-                )}
-              >
-                {score.synergyApplied
-                  ? `applied (+${SYNERGY.bonus.toFixed(2)})`
-                  : "not applied"}
+              <span className={cn("font-semibold", score.synergyApplied ? "text-heritage" : "text-muted")}>
+                {score.synergyApplied ? `applied (+${SYNERGY.bonus.toFixed(2)})` : "not applied"}
               </span>
             </p>
           </div>
@@ -321,11 +260,7 @@ function PairingPage() {
               <div className="mt-3 flex flex-wrap gap-2">
                 {score.shared.length ? (
                   score.shared.map((c) => (
-                    <span
-                      key={c}
-                      className="badge badge-comfortable"
-                      title={COMPOUND_NOTES[c] ?? c}
-                    >
+                    <span key={c} className="badge badge-comfortable" title={COMPOUND_NOTES[c] ?? c}>
                       {c}
                       {COMPOUND_NOTES[c] ? (
                         <span className="ml-1 font-normal normal-case tracking-normal opacity-80">
@@ -339,12 +274,8 @@ function PairingPage() {
                 )}
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                {pa?.coverage && (
-                  <span className="badge badge-comfortable">A: {pa.coverage}</span>
-                )}
-                {pb?.coverage && (
-                  <span className="badge badge-comfortable">B: {pb.coverage}</span>
-                )}
+                {pa?.coverage && <span className="badge badge-comfortable">A: {pa.coverage}</span>}
+                {pb?.coverage && <span className="badge badge-comfortable">B: {pb.coverage}</span>}
               </div>
               <p className="mt-3 text-sm leading-relaxed text-stone-deep">
                 {pa?.notes} {pb?.notes}
@@ -373,7 +304,7 @@ function PairingPage() {
                     <button
                       type="button"
                       className={cn(
-                        "flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm hover:bg-ivory",
+                        "flex min-h-11 w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm hover:bg-ivory",
                         n.b === b && "bg-ivory",
                       )}
                       onClick={() => setB(n.b)}
@@ -391,12 +322,11 @@ function PairingPage() {
           </div>
 
           <div className="mt-5 flex flex-wrap gap-3">
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => setMode("inventory")}
-            >
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setMode("inventory")}>
               Rank against inventory
+            </button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setMode("unexpected")}>
+              Unexpected bridges
             </button>
             <Link to="/match" className="btn btn-ghost btn-sm">
               Open Match

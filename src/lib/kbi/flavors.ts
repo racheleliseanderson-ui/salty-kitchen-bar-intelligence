@@ -475,7 +475,20 @@ export function pairScore(a: string, b: string) {
   };
 }
 
-export function bestPairsFor(name: string, limit = 5, categoryFilter?: string) {
+/** Match ranking leans on the denser co-occurrence table, not 50/50 Jaccard. */
+export const MATCH_FLAVOR = {
+  molecular: 0.35,
+  cooccurrence: 0.65,
+} as const;
+
+export type PairScore = ReturnType<typeof pairScore>;
+
+export type ScoredNeighbor = PairScore & {
+  displayName: string;
+  category: string;
+};
+
+export function bestPairsFor(name: string, limit = 5, categoryFilter?: string): ScoredNeighbor[] {
   return PROFILES.filter((p) => {
     if (p.name === canon(name)) return false;
     if (categoryFilter && p.category !== categoryFilter) return false;
@@ -507,6 +520,63 @@ export function rankInventoryPairs(
     .slice(0, limit);
 }
 
+export type FlavorPair = {
+  a: string;
+  b: string;
+  score: number;
+  cooccurrence: number;
+  molecular: number;
+};
+
+/**
+ * Recipe flavor for Match: required on-hand pairs first, 35/65 molecular/co-occurrence.
+ * Optional ingredients only fill in when fewer than two required are present.
+ */
+export function recipeHarmony(requiredHave: string[], optionalHave: string[] = []) {
+  const primary = requiredHave.length >= 2 ? requiredHave : [...requiredHave, ...optionalHave];
+  const empty = {
+    score: requiredHave.length === 1 ? 0.5 : 0.45,
+    coAvg: 0,
+    molAvg: 0,
+    topPair: null as FlavorPair | null,
+  };
+  if (primary.length < 2) return empty;
+
+  let co = 0;
+  let mol = 0;
+  let n = 0;
+  let syn = 0;
+  let top: FlavorPair | null = null;
+  for (let i = 0; i < primary.length; i++) {
+    for (let j = i + 1; j < primary.length; j++) {
+      const s = pairScore(primary[i]!, primary[j]!);
+      co += s.cooccurrence;
+      mol += s.molecular;
+      if (s.synergyApplied) syn += SYNERGY.bonus;
+      n += 1;
+      const hybrid =
+        MATCH_FLAVOR.molecular * s.molecular + MATCH_FLAVOR.cooccurrence * s.cooccurrence;
+      if (!top || hybrid > top.score) {
+        top = {
+          a: primary[i]!,
+          b: primary[j]!,
+          score: Number(hybrid.toFixed(3)),
+          cooccurrence: s.cooccurrence,
+          molecular: s.molecular,
+        };
+      }
+    }
+  }
+  if (n === 0) return empty;
+  const score = Math.min(1, MATCH_FLAVOR.molecular * (mol / n) + MATCH_FLAVOR.cooccurrence * (co / n) + Math.min(SYNERGY.bonus, syn / n));
+  return {
+    score: Number(score.toFixed(3)),
+    coAvg: Number((co / n).toFixed(3)),
+    molAvg: Number((mol / n).toFixed(3)),
+    topPair: top,
+  };
+}
+
 /** Hand-picked high-signal bridges for the engagement surface. */
 export const FEATURED_BRIDGES: { a: string; b: string; hook: string }[] = [
   { a: "bourbon", b: "angostura", hook: "Oak + baking spice — Old Fashioned bones" },
@@ -522,6 +592,36 @@ export const FEATURED_BRIDGES: { a: string; b: string; hook: string }[] = [
   { a: "mezcal", b: "lime", hook: "Smoke + acid — Oaxaca highball path" },
   { a: "miso", b: "ginger", hook: "Fermented umami + rhizome heat" },
 ];
+
+export type UnexpectedBridge = PairScore & {
+  displayA: string;
+  displayB: string;
+  gap: number;
+};
+
+/** Chemistry agrees; the recipe corpus does not (yet). */
+export function unexpectedBridges(limit = 16): UnexpectedBridge[] {
+  const rows: UnexpectedBridge[] = [];
+  for (let i = 0; i < PROFILES.length; i++) {
+    const a = PROFILES[i]!;
+    if (a.compounds.length < 2) continue;
+    for (let j = i + 1; j < PROFILES.length; j++) {
+      const b = PROFILES[j]!;
+      if (b.compounds.length < 2) continue;
+      const s = pairScore(a.name, b.name);
+      if (s.molecular < 0.25 || s.cooccurrence >= 0.4 || s.shared.length === 0) continue;
+      rows.push({
+        ...s,
+        displayA: a.displayName,
+        displayB: b.displayName,
+        gap: Number((s.molecular - s.cooccurrence).toFixed(3)),
+      });
+    }
+  }
+  return rows.sort((x, y) => y.gap - x.gap || y.molecular - x.molecular).slice(0, limit);
+}
+
+export const UNEXPECTED_BRIDGES = unexpectedBridges(16);
 
 export function inventoryHarmony(names: string[]): number {
   if (names.length < 2) return 0.5;
@@ -540,7 +640,7 @@ export function missingProfiles(names: string[]): string[] {
   return [...new Set(names)].filter((n) => !profileFor(n));
 }
 
-export function explainPair(score: ReturnType<typeof pairScore>): string {
+export function explainPair(score: PairScore): string {
   const parts: string[] = [];
   if (score.synergyApplied) {
     parts.push("Both molecular overlap and recipe practice are elevated — synergy bonus applied.");

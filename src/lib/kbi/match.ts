@@ -1,6 +1,6 @@
 import { daysUntil } from "@/lib/utils";
 import { RECIPES } from "./catalog";
-import { inventoryHarmony, pairScore } from "./flavors";
+import { MATCH_FLAVOR, recipeHarmony } from "./flavors";
 import { covers } from "./hierarchy";
 import type {
   InventoryItem,
@@ -33,31 +33,15 @@ function haveSet(items: InventoryItem[]): Set<string> {
   return new Set(items.map((i) => i.normalizedName));
 }
 
-function recipeFlavor(recipe: Recipe, have: string[]): number {
-  const names = [...recipe.required, ...recipe.optional].filter((n) => have.includes(n));
-  if (names.length >= 2) return inventoryHarmony(names);
-  if (names.length === 1) {
-    const other = recipe.required.find((n) => n !== names[0]);
-    return other ? pairScore(names[0]!, other).composite : 0.5;
-  }
-  return 0.45;
+function recipeFlavor(recipe: Recipe, have: string[]) {
+  const requiredHave = recipe.required.filter((n) => have.includes(n));
+  const optionalHave = recipe.optional.filter((n) => have.includes(n));
+  return recipeHarmony(requiredHave, optionalHave);
 }
 
 /** Strongest on-hand pair for this recipe (for explainability). */
-function topFlavorPair(
-  recipe: Recipe,
-  have: string[],
-): { a: string; b: string; score: number } | null {
-  const names = [...new Set([...recipe.required, ...recipe.optional].filter((n) => have.includes(n)))];
-  if (names.length < 2) return null;
-  let best: { a: string; b: string; score: number } | null = null;
-  for (let i = 0; i < names.length; i++) {
-    for (let j = i + 1; j < names.length; j++) {
-      const score = pairScore(names[i]!, names[j]!).composite;
-      if (!best || score > best.score) best = { a: names[i]!, b: names[j]!, score };
-    }
-  }
-  return best;
+function topFlavorPair(recipe: Recipe, have: string[]) {
+  return recipeFlavor(recipe, have).topPair;
 }
 
 export function scoreRecipe(recipe: Recipe, items: InventoryItem[]): MatchHit {
@@ -82,7 +66,8 @@ export function scoreRecipe(recipe: Recipe, items: InventoryItem[]): MatchHit {
   const urgent = items
     .filter((i) => have.includes(i.normalizedName) || substituted.some((s) => s.used === i.normalizedName))
     .reduce((max, i) => Math.max(max, expiryUrgency(i.expiry)), 0);
-  const flavorScore = recipeFlavor(recipe, [...names]);
+  const flavor = recipeFlavor(recipe, [...names]);
+  const flavorScore = flavor.score;
   const subPenalty = substituted.length * 0.04;
   const timeBias = recipe.minutes <= 15 ? 0.04 : recipe.minutes <= 25 ? 0.02 : 0;
   const composite =
@@ -141,11 +126,11 @@ export function buildBreakdown(hit: MatchHit, items: InventoryItem[]): RankBreak
     ...hit.substituted.map((s) => s.used),
   ]);
   let flavorLabel = "Baseline flavor fit";
-  if (hit.flavorScore >= 0.7) flavorLabel = "Strong flavor harmony among on-hand ingredients";
-  else if (hit.flavorScore >= 0.55) flavorLabel = "Solid flavor co-occurrence";
+  if (hit.flavorScore >= 0.7) flavorLabel = "Strong co-occurrence among on-hand ingredients";
+  else if (hit.flavorScore >= 0.55) flavorLabel = "Solid recipe co-occurrence (35/65 molecular/corpus)";
   else if (hit.flavorScore < 0.45) flavorLabel = "Sparse flavor signal — ranking leans on coverage";
   if (topPair) {
-    flavorLabel += ` · best pair ${topPair.a} + ${topPair.b} (${topPair.score.toFixed(2)})`;
+    flavorLabel += ` · best pair ${topPair.a} + ${topPair.b} (co ${topPair.cooccurrence.toFixed(2)} · mol ${topPair.molecular.toFixed(2)})`;
   }
 
   const hierarchyPenalty = hit.substituted.length * 0.04;
@@ -227,7 +212,7 @@ export function buildBreakdown(hit: MatchHit, items: InventoryItem[]): RankBreak
         ? "Everything required is on hand"
         : "Close — one or two ingredients away";
 
-  const formula = `match ${Math.round(hit.matchPct * 100)}% × (1 + 0.28·expiry ${hit.expiryBoost.toFixed(2)}) × (0.72 + 0.28·flavor ${hit.flavorScore.toFixed(2)}) × (1 − hierarchy ${hierarchyPenalty.toFixed(2)}) + time ${timeBias.toFixed(2)} → ${hit.composite}`;
+  const formula = `match ${Math.round(hit.matchPct * 100)}% × (1 + 0.28·expiry ${hit.expiryBoost.toFixed(2)}) × (0.72 + 0.28·flavor ${hit.flavorScore.toFixed(2)} @ ${MATCH_FLAVOR.cooccurrence}/${MATCH_FLAVOR.molecular} co/mol) × (1 − hierarchy ${hierarchyPenalty.toFixed(2)}) + time ${timeBias.toFixed(2)} → ${hit.composite}`;
 
   return {
     summary,

@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/kbi/PageHeader";
 import { SCENES, cloneScene, type DemoScene } from "@/lib/kbi/vision-demo";
 import { useInventory } from "@/lib/kbi/store";
-import type { InventoryItem } from "@/lib/kbi/types";
+import type { Category, Detection, InventoryItem, Unit } from "@/lib/kbi/types";
 import { VISION } from "@/lib/kbi/report";
 import { bestPairsFor, profileFor } from "@/lib/kbi/flavors";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,20 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/vision")({ component: VisionPage });
 
 type Step = "review" | "details" | "done";
+
+const UNITS: Unit[] = ["count", "bottle", "g", "ml", "oz", "bunch"];
+
+function defaultUnit(category: Category): Unit {
+  if (category === "spirit" || category === "mixer" || category === "condiment") return "bottle";
+  if (category === "herb") return "bunch";
+  if (category === "protein") return "g";
+  return "count";
+}
+
+function defaultQty(category: Category): number {
+  if (category === "protein") return 250;
+  return 1;
+}
 
 function VisionPage() {
   const [scene, setScene] = useState<DemoScene>(() => cloneScene(SCENES[0]!));
@@ -32,48 +46,52 @@ function VisionPage() {
     }
   }
 
+  function patch(id: string, partial: Partial<Detection>) {
+    setScene((s) => ({
+      ...s,
+      detections: s.detections.map((d) => (d.id === id ? { ...d, ...partial } : d)),
+    }));
+  }
+
   function toggle(id: string) {
     setScene((s) => ({
       ...s,
-      detections: s.detections.map((d) =>
-        d.id === id ? { ...d, accepted: !d.accepted } : d,
-      ),
+      detections: s.detections.map((d) => (d.id === id ? { ...d, accepted: !d.accepted } : d)),
     }));
   }
 
   function rename(id: string, label: string) {
+    patch(id, {
+      label,
+      normalizedName: label
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim(),
+    });
+  }
+
+  function ensureDrafts() {
     setScene((s) => ({
       ...s,
-      detections: s.detections.map((d) =>
-        d.id === id
-          ? {
-              ...d,
-              label,
-              normalizedName: label
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, " ")
-                .trim(),
-            }
-          : d,
-      ),
+      detections: s.detections.map((d) => ({
+        ...d,
+        quantity: d.quantity ?? { value: defaultQty(d.category), unit: defaultUnit(d.category) },
+        expiry: d.expiry ?? null,
+      })),
     }));
   }
 
   function acceptHigh() {
     setScene((s) => ({
       ...s,
-      detections: s.detections.map((d) =>
-        d.confidence >= 0.8 ? { ...d, accepted: true } : d,
-      ),
+      detections: s.detections.map((d) => (d.confidence >= 0.8 ? { ...d, accepted: true } : d)),
     }));
   }
 
   function skipLow() {
     setScene((s) => ({
       ...s,
-      detections: s.detections.map((d) =>
-        d.confidence < 0.7 ? { ...d, accepted: false } : d,
-      ),
+      detections: s.detections.map((d) => (d.confidence < 0.7 ? { ...d, accepted: false } : d)),
     }));
   }
 
@@ -100,11 +118,8 @@ function VisionPage() {
         normalizedName: det.normalizedName,
         displayName: det.label,
         category: det.category,
-        quantity: {
-          value: 1,
-          unit: det.category === "spirit" ? "bottle" : "count",
-        },
-        expiry: null,
+        quantity: det.quantity ?? { value: defaultQty(det.category), unit: defaultUnit(det.category) },
+        expiry: det.expiry ?? null,
         location: det.location,
         source: "vision",
         confidence: det.confidence,
@@ -121,10 +136,7 @@ function VisionPage() {
 
   const mean = useMemo(() => {
     if (!scene.detections.length) return 0;
-    return (
-      scene.detections.reduce((a, d) => a + d.confidence, 0) /
-      scene.detections.length
-    );
+    return scene.detections.reduce((acc, d) => acc + d.confidence, 0) / scene.detections.length;
   }, [scene]);
 
   const pairingTeasers = useMemo(() => {
@@ -189,15 +201,10 @@ function VisionPage() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="section-label">Prototype scan · review workflow</p>
-            <h2 className="mt-1 font-display text-2xl">
-              Review before it becomes truth
-            </h2>
+            <h2 className="mt-1 font-display text-2xl">Review before it becomes truth</h2>
           </div>
           <p className="text-sm text-muted">
-            Mean confidence{" "}
-            <span className="tabular font-semibold text-ink">
-              {Math.round(mean * 100)}%
-            </span>
+            Mean confidence <span className="tabular font-semibold text-ink">{Math.round(mean * 100)}%</span>
           </p>
         </div>
 
@@ -213,9 +220,7 @@ function VisionPage() {
               key={id}
               className={cn(
                 "rounded-full border px-3 py-1.5",
-                step === id
-                  ? "border-heritage bg-navy-100 text-heritage"
-                  : "border-line text-muted",
+                step === id ? "border-heritage bg-navy-100 text-heritage" : "border-line text-muted",
               )}
             >
               {label}
@@ -240,12 +245,7 @@ function VisionPage() {
           {scene.blurb} {scene.lighting}.
         </p>
 
-        <Shelf
-          scene={scene}
-          selectedId={selectedDet}
-          onToggle={toggle}
-          onSelect={setSelectedDet}
-        />
+        <Shelf scene={scene} selectedId={selectedDet} onToggle={toggle} onSelect={setSelectedDet} />
 
         {step === "review" && (
           <>
@@ -254,7 +254,7 @@ function VisionPage() {
                 Keep ≥80%
               </button>
               <button type="button" className="btn btn-secondary btn-sm" onClick={skipLow}>
-                Skip &lt;70%
+                Skip {'<'}70%
               </button>
               <button type="button" className="btn btn-ghost btn-sm" onClick={acceptAll}>
                 Keep all
@@ -275,16 +275,13 @@ function VisionPage() {
                 >
                   <button
                     type="button"
-                    className={cn(
-                      "badge",
-                      det.accepted ? "badge-comfortable" : "badge-neutral",
-                    )}
+                    className={cn("badge min-h-9", det.accepted ? "badge-comfortable" : "badge-neutral")}
                     onClick={() => toggle(det.id)}
                   >
                     {det.accepted ? "Keep" : "Skip"}
                   </button>
                   <input
-                    className="field-input min-h-10 flex-1"
+                    className="field-input min-h-11 flex-1"
                     value={det.label}
                     onChange={(e) => rename(det.id, e.target.value)}
                     onFocus={() => setSelectedDet(det.id)}
@@ -294,9 +291,9 @@ function VisionPage() {
                     className={cn(
                       "tabular text-sm",
                       det.confidence >= 0.8
-                        ? "text-[var(--color-ok)]"
+                        ? "text-ok"
                         : det.confidence < 0.7
-                          ? "text-[var(--color-warn)]"
+                          ? "text-warn"
                           : "text-muted",
                     )}
                   >
@@ -312,7 +309,10 @@ function VisionPage() {
                 type="button"
                 className="btn btn-primary"
                 disabled={committed === 0}
-                onClick={() => setStep("details")}
+                onClick={() => {
+                  ensureDrafts();
+                  setStep("details");
+                }}
               >
                 Continue with {committed} item{committed === 1 ? "" : "s"}
               </button>
@@ -326,31 +326,74 @@ function VisionPage() {
         {step === "details" && (
           <div className="mt-5 space-y-4">
             <p className="text-sm text-stone-deep">
-              Final pass before inventory truth. Edit labels if needed, then commit.
-              Quantities and expiry stay user-owned (vision is weak there).
+              Quantity and expiry are yours — vision does not invent them. Edit labels, amounts, and dates, then
+              commit.
             </p>
-            <ul className="space-y-2">
-              {accepted.map((det) => (
-                <li key={det.id} className="panel-inset flex flex-wrap items-center gap-3 p-3">
-                  <span className="badge badge-comfortable">Keep</span>
-                  <input
-                    className="field-input min-h-10 flex-1"
-                    value={det.label}
-                    onChange={(e) => rename(det.id, e.target.value)}
-                    aria-label="Final label"
-                  />
-                  <span className="tabular text-sm text-muted">
-                    {Math.round(det.confidence * 100)}%
-                  </span>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => toggle(det.id)}
-                  >
-                    Remove
-                  </button>
-                </li>
-              ))}
+            <ul className="space-y-3">
+              {accepted.map((det) => {
+                const qty = det.quantity ?? { value: defaultQty(det.category), unit: defaultUnit(det.category) };
+                return (
+                  <li key={det.id} className="panel-inset space-y-3 p-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="badge badge-comfortable">Keep</span>
+                      <input
+                        className="field-input min-h-11 flex-1"
+                        value={det.label}
+                        onChange={(e) => rename(det.id, e.target.value)}
+                        aria-label="Final label"
+                      />
+                      <span className="tabular text-sm text-muted">{Math.round(det.confidence * 100)}%</span>
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => toggle(det.id)}>
+                        Remove
+                      </button>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <label className="text-xs font-semibold uppercase tracking-wide text-muted">
+                        Quantity
+                        <input
+                          className="field-input mt-1 min-h-11"
+                          type="number"
+                          min={0}
+                          step="any"
+                          value={qty.value}
+                          onChange={(e) =>
+                            patch(det.id, {
+                              quantity: { value: Number(e.target.value) || 0, unit: qty.unit },
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="text-xs font-semibold uppercase tracking-wide text-muted">
+                        Unit
+                        <select
+                          className="field-input mt-1 min-h-11"
+                          value={qty.unit}
+                          onChange={(e) =>
+                            patch(det.id, {
+                              quantity: { value: qty.value, unit: e.target.value as Unit },
+                            })
+                          }
+                        >
+                          {UNITS.map((u) => (
+                            <option key={u} value={u}>
+                              {u}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="text-xs font-semibold uppercase tracking-wide text-muted">
+                        Expiry (optional)
+                        <input
+                          className="field-input mt-1 min-h-11"
+                          type="date"
+                          value={det.expiry ?? ""}
+                          onChange={(e) => patch(det.id, { expiry: e.target.value || null })}
+                        />
+                      </label>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
             {accepted.length === 0 && (
               <p className="text-sm text-muted">Nothing left to commit. Go back and Keep some items.</p>
@@ -377,7 +420,8 @@ function VisionPage() {
               <p className="font-semibold">Committed {committedIds.length} item(s) to local inventory.</p>
               <p className="mt-1 text-sm">
                 Source tagged <span className="font-mono">vision</span>. Low-confidence rows carry a{" "}
-                <span className="font-mono">needs_review</span> tag.
+                <span className="font-mono">needs_review</span> tag. Quantity and expiry are stored as you entered
+                them.
               </p>
             </div>
             {pairingTeasers.length > 0 && (
@@ -440,6 +484,69 @@ function VisionPage() {
   );
 }
 
+const CAT_TONE: Record<Category, string> = {
+  spirit: "text-ivory",
+  mixer: "text-brass",
+  produce: "text-ok",
+  dairy: "text-navy-200",
+  pantry: "text-champagne",
+  protein: "text-linen",
+  herb: "text-ok",
+  condiment: "text-champagne",
+  garnish: "text-linen",
+};
+
+function Silhouette({ category }: { category: Category }) {
+  if (category === "spirit" || category === "mixer") {
+    return (
+      <svg viewBox="0 0 40 110" className="h-full w-full min-h-0 flex-1 fill-current" aria-hidden>
+        <path
+          fill="currentColor"
+          d="M15 4h10v8l5 10v70a8 8 0 0 1-8 8H18a8 8 0 0 1-8-8V22l5-10V4z"
+        />
+        <rect x="16" y="0" width="8" height="6" rx="1" fill="currentColor" opacity="0.85" />
+      </svg>
+    );
+  }
+  if (category === "produce") {
+    return (
+      <svg viewBox="0 0 48 48" className="h-full w-full min-h-0 flex-1 fill-current" aria-hidden>
+        <ellipse cx="24" cy="26" rx="16" ry="14" fill="currentColor" />
+        <path d="M24 8c4 4 6 8 4 12" fill="none" stroke="currentColor" strokeWidth="3" />
+      </svg>
+    );
+  }
+  if (category === "dairy") {
+    return (
+      <svg viewBox="0 0 48 72" className="h-full w-full" aria-hidden>
+        <path fill="currentColor" d="M12 16 18 6h12l6 10v48a4 4 0 0 1-4 4H16a4 4 0 0 1-4-4V16z" />
+      </svg>
+    );
+  }
+  if (category === "herb") {
+    return (
+      <svg viewBox="0 0 48 72" className="h-full w-full" aria-hidden>
+        <path fill="currentColor" d="M24 68V18m0 0C16 28 8 30 8 22 8 12 24 8 24 8s16 4 16 14c0 8-8 6-16-4z" />
+        <circle cx="16" cy="28" r="8" fill="currentColor" opacity="0.8" />
+        <circle cx="32" cy="24" r="7" fill="currentColor" opacity="0.7" />
+      </svg>
+    );
+  }
+  if (category === "protein") {
+    return (
+      <svg viewBox="0 0 64 40" className="h-full w-full min-h-0 flex-1 fill-current" aria-hidden>
+        <rect x="4" y="8" width="56" height="24" rx="6" fill="currentColor" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 48 64" className="h-full w-full" aria-hidden>
+      <path fill="currentColor" d="M10 18c0-6 6-10 14-10s14 4 14 10v34a6 6 0 0 1-6 6H16a6 6 0 0 1-6-6V18z" />
+      <rect x="16" y="6" width="16" height="10" rx="2" fill="currentColor" opacity="0.85" />
+    </svg>
+  );
+}
+
 function Shelf({
   scene,
   selectedId,
@@ -452,9 +559,9 @@ function Shelf({
   onSelect: (id: string) => void;
 }) {
   return (
-    <div className="relative mt-5 aspect-[16/9] overflow-hidden rounded-xl border border-line bg-heritage">
-      <div className="absolute inset-x-0 bottom-8 h-2 bg-linen/40" />
-      <div className="absolute inset-x-0 bottom-[42%] h-2 bg-linen/25" />
+    <div className="vision-shelf relative mt-5 aspect-[16/9] overflow-hidden rounded-xl border border-line">
+      <div className="absolute inset-x-0 bottom-[8%] h-2 bg-linen/50" />
+      <div className="absolute inset-x-0 bottom-[42%] h-2 bg-linen/30" />
       {scene.detections.map((det) => {
         const isSelected = selectedId === det.id;
         return (
@@ -466,11 +573,10 @@ function Shelf({
               onToggle(det.id);
             }}
             className={cn(
-              "absolute rounded-sm border transition",
-              det.accepted
-                ? "border-champagne/80 bg-ivory/20"
-                : "border-stone/40 bg-ink-deep/40",
-              isSelected && "ring-2 ring-champagne ring-offset-1 ring-offset-heritage",
+              "absolute flex flex-col items-center justify-end rounded-sm bg-ivory/10 p-0.5 transition",
+              CAT_TONE[det.category],
+              det.accepted ? "opacity-100" : "opacity-40",
+              isSelected && "z-10 ring-2 ring-champagne ring-offset-1 ring-offset-heritage",
             )}
             style={{
               left: `${det.box.x}%`,
@@ -481,11 +587,10 @@ function Shelf({
             aria-label={`${det.label}, ${Math.round(det.confidence * 100)} percent, ${det.accepted ? "kept" : "skipped"}`}
             title={`${det.label} · ${Math.round(det.confidence * 100)}%`}
           >
-            {isSelected && (
-              <span className="absolute inset-x-0 bottom-0 truncate bg-ink-deep/70 px-0.5 text-[10px] leading-tight text-ivory">
-                {det.label}
-              </span>
-            )}
+            <Silhouette category={det.category} />
+            <span className="mt-0.5 w-full truncate bg-ink-deep/70 px-0.5 text-center text-[9px] leading-tight text-ivory">
+              {det.label}
+            </span>
           </button>
         );
       })}

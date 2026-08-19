@@ -57,6 +57,9 @@ export interface Detection {
   confidence: number;
   box: { x: number; y: number; w: number; h: number };
   accepted: boolean;
+  /** User-owned on Confirm — vision does not infer these. */
+  quantity?: Quantity;
+  expiry?: string | null;
 }
 
 export interface FlavorProfile {
@@ -134,7 +137,13 @@ export interface RankBreakdown {
     score: number;
     label: string;
     /** Strongest on-hand pair contributing to harmony, if any. */
-    topPair: { a: string; b: string; score: number } | null;
+    topPair: {
+      a: string;
+      b: string;
+      score: number;
+      cooccurrence: number;
+      molecular: number;
+    } | null;
   };
   hierarchy: {
     swaps: { needed: string; used: string }[];
@@ -153,21 +162,34 @@ export interface SmartBuy {
   unlocks: string[];
 }
 
-export interface AvailabilityItem {
-  normalizedName: string;
-  displayName: string;
-  category: Category;
-  quantity?: Quantity;
-  expiry?: string | null;
-  location?: Location;
-  confidence?: number;
-  userIntent?: UserIntent;
+export interface PacketIngredient {
+  normalized_name: string;
+  quantity_hint: string;
+  expiry_urgency: ExpiryUrgency;
 }
 
 export interface AvailabilityPacket {
-  version: typeof PACKET_VERSION;
-  appId: typeof APP_ID;
-  generatedAt: string;
-  items: AvailabilityItem[];
-  notes?: string;
+  contract_version: typeof PACKET_VERSION;
+  timestamp: string;
+  source: "KitchenBarLayer";
+  application_id: typeof APP_ID;
+  user_intent: UserIntent;
+  available_ingredients: PacketIngredient[];
+  hard_user_constraints: string[];
+  optional_notes: string[];
+  handoff_id: string;
+}
+
+export interface Competitor {
+  id: string;
+  name: string;
+  role: string;
+  food: boolean;
+  bar: boolean;
+  vision: boolean;
+  chemistry: boolean;
+  url: string;
+  sourceNote?: string;
+  strengths: string[];
+  limits: string[];
 }

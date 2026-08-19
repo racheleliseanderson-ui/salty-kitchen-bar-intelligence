@@ -326,6 +326,17 @@
     border-left-color: var(--color-brass);
     background: var(--color-gold-100);
   }
+
+  .vision-shelf {
+    background:
+      linear-gradient(180deg, rgb(18 48 74 / 0.4), transparent 30%),
+      repeating-linear-gradient(
+        90deg,
+        var(--color-burnished) 0 14px,
+        var(--color-heritage) 14px 28px
+      );
+    box-shadow: inset 0 0 40px rgb(3 11 18 / 0.45);
+  }
 }
 
 @layer utilities {

@@ -59,5 +59,6 @@ export const METHOD_NOTES = [
   "Coverage labels (rich / moderate / sparse) mark how dense each profile is.",
   "Always state sources, formula, data version, and limits: matrix effects, cooking transformations, sparsity, cultural bias, license constraints.",
   "Any generative layer must be constrained by these scores so the model cannot invent unsupported pairs.",
-  "This is a curated, version-pinned stand-in for product exploration. Production density requires cleared licenses and an explicit subset version pin; the scoring formula stays the same.",
+  "Match flavorScore uses the same pair table but blends 35% molecular / 65% co-occurrence on required on-hand pairs, so ranking tracks the denser corpus.",
+  "Unexpected bridges: molecular Jaccard ≥ 0.25 with co-occurrence still below 0.40 — chemistry without (yet) a recipe habit.",
 ];
