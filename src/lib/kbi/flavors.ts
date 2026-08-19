@@ -1,7 +1,7 @@
 import { RECIPES } from "./seed-recipes";
 import type { FlavorProfile, ProfileCoverage } from "./types";
 
-export const DATA_VERSION = "2026.08.19-curated-v9-edge";
+export const DATA_VERSION = "2026.08.19-curated-v10-npmi";
 export const LAST_REVIEWED = "2026-08-19";
 
 export const SYNERGY = { molecularMin: 0.25, coMin: 0.5, bonus: 0.08 } as const;
@@ -53,6 +53,11 @@ export const COMPOUND_NOTES: Record<string, string> = {
   "tetramethylpyrazine": "Cocoa roast",
   "butyric acid": "Sharp dairy / cheese",
   "acetic acid": "Bright vinegar",
+  "2-heptanone": "Blue-cheese / dairy ketone",
+  "methyl ketone": "Aged cheese pungency",
+  "5-acetoxymethylfurfural": "Balsamic caramel",
+  phenol: "Smoky phenolic",
+  syringol: "Sweet smoke",
 };
 
 const ALIASES: Record<string, string> = {
@@ -61,6 +66,11 @@ const ALIASES: Record<string, string> = {
   kahlua: "coffee liqueur", "maple syrup": "maple", "pineapple juice": "pineapple",
   reposado: "tequila", "tomato paste": "tomato", "white rum": "rum", mustard: "dijon",
   oil: "olive oil", "hot water": "water",
+  "balsamic vinegar": "balsamic",
+  "smoked sea salt": "smoked salt",
+  gorgonzola: "blue cheese",
+  roquefort: "blue cheese",
+  stilton: "blue cheese",
 };
 
 function canon(name: string): string { return ALIASES[name] ?? name; }
@@ -120,6 +130,10 @@ export const PROFILES: FlavorProfile[] = [
   p("prosecco", "Prosecco", "mixer", ["ethyl acetate", "isoamyl acetate"], "Sparkling wine.", "sparse"),
   p("sweet vermouth", "Sweet vermouth", "mixer", ["vanillin", "cinnamaldehyde", "quinine"], "Sweet fortified wine.", "moderate"),
   p("dry vermouth", "Dry vermouth", "mixer", ["linalool", "wormwood"], "Dry fortified wine.", "sparse"),
+  p("smoked salt", "Smoked salt", "condiment", ["guaiacol", "phenol", "syringol"], "Salt with phenolic smoke.", "moderate"),
+  p("balsamic", "Balsamic vinegar", "condiment", ["acetic acid", "furfural", "5-acetoxymethylfurfural"], "Aged sweet-sour vinegar.", "moderate"),
+  p("blue cheese", "Blue cheese", "dairy", ["butyric acid", "2-heptanone", "methyl ketone"], "Pungent aged blue.", "moderate"),
+  p("smoked paprika", "Smoked paprika", "condiment", ["guaiacol", "pyrazines", "phenol"], "Sweet smoke chile.", "sparse"),
 ].sort((a, b) => a.displayName.localeCompare(b.displayName));
 
 function profileFor(name: string): FlavorProfile | undefined {
@@ -151,6 +165,26 @@ const CURATED: Record<string, Record<string, number>> = {};
     ["pineapple", "jalapeno", 0.34], ["apple", "cheddar", 0.36], ["coconut milk", "chili flakes", 0.3],
     ["ginger", "chocolate", 0.28], ["lime", "ginger", 0.38], ["orange", "vanilla", 0.36],
     ["gin", "basil", 0.34], ["bourbon", "chili flakes", 0.26], ["tomato", "coffee", 0.24],
+    ["smoked salt", "chocolate", 0.28],
+    ["smoked salt", "bourbon", 0.30],
+    ["smoked salt", "maple", 0.34],
+    ["smoked salt", "scotch", 0.36],
+    ["smoked salt", "bacon", 0.38],
+    ["balsamic", "berries", 0.38],
+    ["balsamic", "black pepper", 0.30],
+    ["balsamic", "tomato", 0.42],
+    ["balsamic", "cherry", 0.34],
+    ["balsamic", "orange", 0.28],
+    ["balsamic", "honey", 0.32],
+    ["blue cheese", "honey", 0.36],
+    ["blue cheese", "apple", 0.34],
+    ["blue cheese", "bourbon", 0.26],
+    ["blue cheese", "butter", 0.30],
+    ["smoked paprika", "chocolate", 0.28],
+    ["smoked paprika", "tomato", 0.36],
+    ["smoked paprika", "lime", 0.30],
+    ["smoked paprika", "orange", 0.28],
+    ["smoked paprika", "bourbon", 0.26],
   ];
   for (const [a, b, v] of pairs) {
     (CURATED[a] ??= {})[b] = v;
@@ -158,22 +192,44 @@ const CURATED: Record<string, Record<string, number>> = {};
   }
 })();
 
+/**
+ * True NPMI co-occurrence over the curated recipe corpus (food + cocktail ~290 recipes).
+ * PMI = log(P(xy) / (P(x)P(y))); NPMI = PMI / -log(P(xy)) ∈ [-1, 1].
+ * Mapped to [0, 1] via (NPMI + 1) / 2 so it blends with molecular scores.
+ * Pairs that never co-occur stay absent (0) — unexpected bridges rely on that gap.
+ */
 function fromCorpus(): Record<string, Record<string, number>> {
-  const counts = new Map<string, number>();
+  const N = RECIPES.length;
+  if (N === 0) return {};
+
+  const df = new Map<string, number>();
+  const pair = new Map<string, number>();
+
   for (const recipe of RECIPES) {
     const names = [...new Set([...recipe.required, ...recipe.optional].map(canon))];
+    for (const name of names) df.set(name, (df.get(name) ?? 0) + 1);
     for (let i = 0; i < names.length; i++) {
       for (let j = i + 1; j < names.length; j++) {
-        const a = names[i]!, b = names[j]!;
+        const a = names[i]!;
+        const b = names[j]!;
         const key = a < b ? `${a}||${b}` : `${b}||${a}`;
-        counts.set(key, (counts.get(key) ?? 0) + 1);
+        pair.set(key, (pair.get(key) ?? 0) + 1);
       }
     }
   }
+
   const out: Record<string, Record<string, number>> = {};
-  for (const [key, n] of counts) {
+  for (const [key, nxy] of pair) {
     const [a, b] = key.split("||") as [string, string];
-    const score = Number(Math.min(0.95, 0.38 + 0.18 * n).toFixed(3));
+    const px = (df.get(a) ?? 0) / N;
+    const py = (df.get(b) ?? 0) / N;
+    const pxy = nxy / N;
+    if (px <= 0 || py <= 0 || pxy <= 0) continue;
+    const pmi = Math.log(pxy / (px * py));
+    const denom = -Math.log(pxy);
+    const npmi = denom === 0 ? 0 : pmi / denom;
+    const score = Number(Math.max(0, Math.min(1, (npmi + 1) / 2)).toFixed(3));
+    if (score <= 0) continue;
     (out[a] ??= {})[b] = score;
     (out[b] ??= {})[a] = score;
   }
@@ -317,6 +373,9 @@ export const FEATURED_BRIDGES = [
   { a: "mezcal", b: "lime", hook: "Smoke + acid — Oaxaca highball path" },
   { a: "tomato", b: "basil", hook: "Caprese chemistry — green and fruit" },
   { a: "gin", b: "cucumber", hook: "Cool garden martini direction" },
+  { a: "balsamic", b: "berries", hook: "Sweet-sour fruit — board or dessert path" },
+  { a: "blue cheese", b: "honey", hook: "Pungent dairy + floral sweet" },
+  { a: "smoked salt", b: "chocolate", hook: "Phenolic smoke on cocoa" },
 ] as const;
 
 export function rankInventoryPairs(focal: string, inventoryNames: string[], limit = 10) {
