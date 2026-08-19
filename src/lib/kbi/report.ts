@@ -46,7 +46,7 @@ export const PAIRING_SOURCES = [
   {
     name: "Recipe co-occurrence",
     detail:
-      "OpenRecipes, public-domain cookbooks, and CC collections for NPMI-style statistics. Cultural and regional bias remain — Western and classic bar corpora are still over-represented relative to Levantine, Indian, West African, Mexican, and East Asian practice.",
+      "Curated ~290-recipe corpus (food + cocktail) for true NPMI co-occurrence, grounded in OpenRecipes-style and classic bar pairs. Cultural and regional bias remain — Western and classic bar corpora are still over-represented.",
   },
 ];
 
@@ -54,12 +54,12 @@ export const PAIRING_SOURCES = [
 export const METHOD_NOTES = [
   "Score = hybrid of (A) IDF-weighted molecular Jaccard and (B) recipe co-occurrence, plus a synergy bonus when both are high.",
   "(A) Molecular: IDF-weighted Jaccard on shared volatiles — rare compounds count more than ubiquitous ones (hexanal, ethanol).",
-  "(B) Co-occurrence: NPMI-style statistics over open recipe collections and classic pairs (not proprietary menus).",
+  "(B) Co-occurrence: true NPMI over the curated ~290-recipe corpus (food + cocktail), mapped to [0,1], merged with curated classic/edge pairs.",
   "Default blend is 50/50. Sparse profiles lean 35/65 toward co-occurrence so ranking stays useful while chemistry density is incomplete.",
   "Synergy bonus: +0.08 only when IDF molecular > 0.25 AND Recipe co-occurrence > 0.5. Never invents chemistry from one side alone.",
   "Coverage labels (rich / moderate / sparse) mark how dense each profile is.",
   "Sources, formula, data version, and limits are always visible: matrix effects, cooking transformations, sparsity, cultural bias, license constraints.",
   "Any generative suggestion must be constrained by these scores so unsupported pairs cannot be invented.",
   "Match flavorScore uses the same pair table but blends 35% molecular / 65% co-occurrence on required on-hand pairs, so ranking tracks the denser corpus.",
-  "Unexpected bridges: high IDF molecular with co-occurrence still below 0.40, ranked by gap then by rarity of shared compounds — chemistry without (yet) a recipe habit. Edge pairs are sensory-plausible experiments, not guarantees.",
+  "Unexpected bridges: high IDF molecular with NPMI still below 0.40, ranked by gap then by rarity of shared compounds. Includes smoked salt, balsamic, blue cheese, and other edge anchors — sensory-plausible experiments, not guarantees.",
 ];
