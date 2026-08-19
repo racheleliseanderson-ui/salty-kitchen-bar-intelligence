@@ -1,11 +1,11 @@
 import { RECIPES } from "./seed-recipes";
-import type { FlavorProfile } from "./types";
+import type { FlavorProfile, ProfileCoverage } from "./types";
 
 /**
  * Curated FlavorDB / FooDB-style volatile sets — educational stand-in only.
  * Coverage rule: every normalizedName in RECIPES or sampleInventory resolves.
  */
-export const DATA_VERSION = "2026.08.19-curated-v6";
+export const DATA_VERSION = "2026.08.19-curated-v7";
 export const LAST_REVIEWED = "2026-08-19";
 
 export const SYNERGY = {
@@ -13,6 +13,51 @@ export const SYNERGY = {
   coMin: 0.5,
   bonus: 0.08,
 } as const;
+
+/** Short sensory notes for shared compounds shown in the explorer. */
+export const COMPOUND_NOTES: Record<string, string> = {
+  vanillin: "Vanilla, sweet oak",
+  "oak lactone": "Coconut-oak, woody",
+  eugenol: "Clove, baking spice",
+  guaiacol: "Smoke, roast",
+  furfural: "Toasted, caramel",
+  limonene: "Citrus peel",
+  linalool: "Floral-citrus, coriander",
+  citral: "Lemon-lime brightness",
+  quinine: "Bitter tonic",
+  cinnamaldehyde: "Cinnamon bark",
+  benzaldehyde: "Almond, cherry stone",
+  menthol: "Cooling mint",
+  methional: "Savory, cooked potato",
+  glutamate: "Umami depth",
+  diacetyl: "Buttery",
+  "delta-decalactone": "Creamy peach/coconut",
+  hexanal: "Green, cut grass",
+  "cis-3-hexenal": "Fresh tomato leaf",
+  pyrazines: "Roasted, nutty",
+  piperine: "Black pepper heat",
+  capsaicin: "Chili burn",
+  allicin: "Garlic punch",
+  trimethylamine: "Fishy, marine",
+  "2-furfurylthiol": "Roasted coffee",
+  quassin: "Bitter quassia",
+  "orange oil": "Sweet orange peel",
+  "citrus peel oils": "Zesty peel",
+  "beta-ionone": "Floral violet, berry",
+  furaneol: "Strawberry caramel",
+  "alpha-pinene": "Pine, juniper",
+  juniperol: "Gin juniper core",
+  wormwood: "Absinthe/vermouth bitter",
+  "peat phenols": "Islay smoke",
+  gingerol: "Fresh ginger heat",
+  zingerone: "Cooked ginger sweetness",
+  nootkatone: "Grapefruit pith",
+  "isoamyl acetate": "Banana ester",
+  "ethyl acetate": "Fruity solvent",
+  sucrose: "Neutral sweet",
+  "carbon dioxide": "Sparkle",
+  ethanol: "Spirit base",
+};
 
 const ALIASES: Record<string, string> = {
   blanco: "tequila",
@@ -44,17 +89,25 @@ function p(
   category: string,
   compounds: string[],
   notes: string,
-  coverage: "rich" | "moderate" | "sparse" = "moderate",
+  coverage: ProfileCoverage = "moderate",
 ): FlavorProfile {
-  return { name, displayName, category, compounds, notes, coverage, sourceNote: "Curated educational stand-in" };
+  return {
+    name,
+    displayName,
+    category,
+    compounds,
+    notes,
+    coverage,
+    sourceNote: "Curated educational stand-in",
+  };
 }
 
 export const PROFILES: FlavorProfile[] = [
-  p("amaro", "Amaro", "spirit", ["quinine", "eugenol", "citrus peel oils"], "Bitter-herbal.", "moderate"),
-  p("amaretto", "Amaretto", "spirit", ["benzaldehyde", "vanillin"], "Almond liqueur.", "sparse"),
+  p("amaro", "Amaro", "spirit", ["quinine", "eugenol", "citrus peel oils", "vanillin"], "Bitter-herbal.", "moderate"),
+  p("amaretto", "Amaretto", "spirit", ["benzaldehyde", "vanillin", "ethyl acetate"], "Almond liqueur.", "sparse"),
   p("anchovies", "Anchovies", "condiment", ["trimethylamine", "methional", "glutamate"], "Salt-forward fish.", "moderate"),
   p("angostura", "Angostura", "mixer", ["eugenol", "cinnamaldehyde", "quassin", "vanillin"], "Baking-spice bitters.", "rich"),
-  p("aperol", "Aperol", "spirit", ["limonene", "linalool", "orange oil"], "Softer bitter orange.", "moderate"),
+  p("aperol", "Aperol", "spirit", ["limonene", "linalool", "orange oil", "quinine"], "Softer bitter orange.", "moderate"),
   p("apple", "Apple", "produce", ["ethyl-2-methylbutyrate", "hexanal", "linalool"], "Fresh fruit.", "moderate"),
   p("avocado", "Avocado", "produce", ["hexanal", "trans-2-hexenal"], "Green fat.", "sparse"),
   p("bacon", "Bacon", "protein", ["guaiacol", "2,3-butanedione", "pyrazines"], "Smoke and fat.", "moderate"),
@@ -78,7 +131,7 @@ export const PROFILES: FlavorProfile[] = [
   p("chicken", "Chicken", "protein", ["methional", "2-acetyl-2-thiazoline", "hexanal"], "Roast protein.", "sparse"),
   p("chickpeas", "Chickpeas", "pantry", ["hexanal", "2-methoxy-3-isopropylpyrazine"], "Neutral pulse.", "sparse"),
   p("chili flakes", "Chili flakes", "condiment", ["capsaicin", "hexanal"], "Dried heat.", "sparse"),
-  p("chocolate", "Chocolate", "pantry", ["tetramethylpyrazine", "vanillin", "2-methylbutanal"], "Cocoa.", "moderate"),
+  p("chocolate", "Chocolate", "pantry", ["tetramethylpyrazine", "vanillin", "2-methylbutanal", "guaiacol"], "Cocoa.", "moderate"),
   p("cilantro", "Cilantro", "herb", ["decanal", "(E)-2-decenal", "linalool"], "Soapy-citrus leaf for some.", "moderate"),
   p("cinnamon", "Cinnamon", "pantry", ["cinnamaldehyde", "eugenol"], "Warm bark.", "sparse"),
   p("coconut milk", "Coconut milk", "pantry", ["delta-decalactone", "gamma-nonalactone", "octanoic acid"], "Lactone fat.", "moderate"),
@@ -106,7 +159,7 @@ export const PROFILES: FlavorProfile[] = [
   p("ginger", "Ginger", "produce", ["gingerol", "zingerone", "citral"], "Pungent rhizome.", "moderate"),
   p("ginger beer", "Ginger beer", "mixer", ["gingerol", "citral", "carbon dioxide"], "Spicy soda.", "sparse"),
   p("grapefruit", "Grapefruit", "produce", ["limonene", "nootkatone", "citral"], "Bitter citrus.", "moderate"),
-  p("honey", "Honey", "pantry", ["phenylacetaldehyde", "furfural"], "Floral sugar.", "moderate"),
+  p("honey", "Honey", "pantry", ["phenylacetaldehyde", "furfural", "vanillin"], "Floral sugar.", "moderate"),
   p("hot sauce", "Hot sauce", "condiment", ["capsaicin", "acetic acid"], "Vinegar heat.", "sparse"),
   p("irish whiskey", "Irish whiskey", "spirit", ["vanillin", "oak lactone", "ester notes"], "Softer whiskey.", "sparse"),
   p("jalapeno", "Jalapeño", "produce", ["capsaicin", "2-isobutyl-3-methoxypyrazine"], "Fresh heat.", "sparse"),
@@ -161,7 +214,7 @@ export const PROFILES: FlavorProfile[] = [
   p("sugar", "Sugar", "pantry", ["sucrose"], "Dry sweetener.", "sparse"),
   p("sumac", "Sumac", "pantry", ["malic acid"], "Tart berry acid.", "sparse"),
   p("suze", "Suze", "spirit", ["gentian", "quinine"], "Bitter aperitif.", "sparse"),
-  p("sweet vermouth", "Sweet vermouth", "mixer", ["vanillin", "cinnamon aldehyde", "orange oil", "wormwood"], "Fortified botanical wine.", "moderate"),
+  p("sweet vermouth", "Sweet vermouth", "mixer", ["vanillin", "cinnamaldehyde", "orange oil", "wormwood"], "Fortified botanical wine.", "moderate"),
   p("tahini", "Tahini", "pantry", ["pyrazines", "sesame thiols"], "Sesame paste.", "moderate"),
   p("tequila", "Tequila", "spirit", ["isoamyl alcohol", "beta-damascenone", "vanillin"], "Agave.", "moderate"),
   p("tofu", "Tofu", "protein", ["hexanal", "beany notes"], "Soy protein.", "sparse"),
@@ -182,43 +235,157 @@ export const PROFILES: FlavorProfile[] = [
 const CURATED: Record<string, Record<string, number>> = {};
 
 (() => {
+  // Expanded seed: classic cocktail, food-bar bridges, pantry staples, sparse-fill.
+  // Scores are educational stand-ins for NPMI-style co-occurrence, not lab assays.
   const pairs: [string, string, number][] = [
-    ["aperol", "prosecco", 0.9],
-    ["avocado", "lime", 0.85],
-    ["bourbon", "angostura", 0.92],
-    ["bourbon", "sweet vermouth", 0.86],
-    ["campari", "sweet vermouth", 0.88],
-    ["chickpeas", "tahini", 0.9],
-    ["cilantro", "lime", 0.9],
-    ["cognac", "cointreau", 0.82],
-    ["fish sauce", "lime", 0.75],
-    ["garlic", "olive oil", 0.9],
-    ["garlic", "tomato", 0.94],
-    ["gin", "campari", 0.84],
-    ["gin", "dry vermouth", 0.88],
-    ["gin", "tonic", 0.9],
-    ["lillet", "gin", 0.75],
-    ["maple", "bourbon", 0.7],
-    ["mezcal", "lime", 0.7],
-    ["mint", "bourbon", 0.7],
-    ["mint", "rum", 0.78],
-    ["pasta", "parmesan", 0.85],
-    ["pineapple", "rum", 0.85],
-    ["rum", "lime", 0.92],
-    ["soy sauce", "sesame oil", 0.85],
-    ["tequila", "cointreau", 0.85],
-    ["tequila", "lime", 0.9],
-    ["tomato", "basil", 0.88],
-    ["vodka", "coffee liqueur", 0.8],
-    ["scotch", "angostura", 0.8],
-    ["irish whiskey", "coffee", 0.75],
-    ["chartreuse", "gin", 0.7],
-    ["orgeat", "gin", 0.72],
-    ["orgeat", "bourbon", 0.65],
-    ["feta", "cucumber", 0.7],
-    ["tahini", "lemon", 0.75],
-    ["mozzarella", "tomato", 0.85],
-    ["mint", "lime", 0.8],
+    // Classic bar
+    ["aperol", "prosecco", 0.92],
+    ["bourbon", "angostura", 0.94],
+    ["bourbon", "sweet vermouth", 0.9],
+    ["bourbon", "maple", 0.78],
+    ["bourbon", "honey", 0.76],
+    ["bourbon", "mint", 0.74],
+    ["bourbon", "orange", 0.72],
+    ["bourbon", "lemon", 0.7],
+    ["bourbon", "chocolate", 0.68],
+    ["bourbon", "coffee", 0.65],
+    ["rye", "sweet vermouth", 0.88],
+    ["rye", "angostura", 0.9],
+    ["campari", "sweet vermouth", 0.9],
+    ["campari", "orange", 0.82],
+    ["gin", "campari", 0.86],
+    ["gin", "dry vermouth", 0.9],
+    ["gin", "tonic", 0.93],
+    ["gin", "lemon", 0.8],
+    ["gin", "lime", 0.78],
+    ["gin", "cucumber", 0.72],
+    ["gin", "mint", 0.7],
+    ["gin", "chartreuse", 0.74],
+    ["gin", "orgeat", 0.7],
+    ["lillet", "gin", 0.78],
+    ["vodka", "tonic", 0.88],
+    ["vodka", "coffee liqueur", 0.84],
+    ["vodka", "cranberry", 0.8],
+    ["vodka", "lime", 0.75],
+    ["tequila", "cointreau", 0.88],
+    ["tequila", "lime", 0.94],
+    ["tequila", "grapefruit", 0.8],
+    ["tequila", "orange", 0.72],
+    ["mezcal", "lime", 0.78],
+    ["mezcal", "honey", 0.72],
+    ["mezcal", "campari", 0.7],
+    ["rum", "lime", 0.94],
+    ["rum", "mint", 0.86],
+    ["rum", "pineapple", 0.88],
+    ["rum", "orgeat", 0.8],
+    ["rum", "cointreau", 0.76],
+    ["cognac", "cointreau", 0.84],
+    ["scotch", "angostura", 0.82],
+    ["scotch", "honey", 0.7],
+    ["irish whiskey", "coffee", 0.8],
+    ["amaro", "bourbon", 0.72],
+    ["amaro", "lemon", 0.68],
+    ["aperol", "bourbon", 0.7],
+    ["aperol", "lemon", 0.74],
+    ["cointreau", "lemon", 0.78],
+    ["cointreau", "lime", 0.8],
+    ["orange bitters", "bourbon", 0.76],
+    ["orange bitters", "gin", 0.7],
+    ["maraschino", "gin", 0.72],
+    ["chartreuse", "lemon", 0.68],
+
+    // Food + bar bridges
+    ["bourbon", "bacon", 0.7],
+    ["bourbon", "maple", 0.78],
+    ["gin", "cucumber", 0.72],
+    ["gin", "basil", 0.68],
+    ["rum", "coconut milk", 0.75],
+    ["tequila", "cilantro", 0.72],
+    ["mezcal", "chocolate", 0.65],
+    ["scotch", "chocolate", 0.68],
+    ["coffee", "bourbon", 0.65],
+    ["chocolate", "orange", 0.7],
+    ["honey", "lemon", 0.8],
+    ["mint", "lime", 0.88],
+    ["mint", "cucumber", 0.7],
+
+    // Core kitchen
+    ["garlic", "olive oil", 0.94],
+    ["garlic", "tomato", 0.95],
+    ["tomato", "basil", 0.92],
+    ["tomato", "oregano", 0.85],
+    ["pasta", "parmesan", 0.9],
+    ["pasta", "garlic", 0.88],
+    ["chickpeas", "tahini", 0.93],
+    ["tahini", "lemon", 0.86],
+    ["tahini", "garlic", 0.84],
+    ["cilantro", "lime", 0.94],
+    ["fish sauce", "lime", 0.88],
+    ["fish sauce", "garlic", 0.8],
+    ["soy sauce", "sesame oil", 0.9],
+    ["soy sauce", "ginger", 0.86],
+    ["miso", "ginger", 0.78],
+    ["miso", "scallion", 0.75],
+    ["avocado", "lime", 0.9],
+    ["avocado", "cilantro", 0.82],
+    ["feta", "cucumber", 0.8],
+    ["feta", "lemon", 0.78],
+    ["feta", "olive oil", 0.82],
+    ["mozzarella", "tomato", 0.9],
+    ["mozzarella", "basil", 0.88],
+    ["parmesan", "black pepper", 0.75],
+    ["bacon", "eggs", 0.85],
+    ["butter", "lemon", 0.72],
+    ["butter", "garlic", 0.8],
+    ["onion", "garlic", 0.9],
+    ["carrot", "onion", 0.78],
+    ["celery", "onion", 0.8],
+    ["ginger", "garlic", 0.88],
+    ["ginger", "lime", 0.82],
+    ["cumin", "garlic", 0.8],
+    ["cumin", "lime", 0.72],
+    ["sumac", "lemon", 0.78],
+    ["sumac", "olive oil", 0.74],
+    ["yogurt", "cucumber", 0.82],
+    ["yogurt", "mint", 0.8],
+    ["yogurt", "garlic", 0.78],
+    ["peanut butter", "lime", 0.7],
+    ["peanut butter", "soy sauce", 0.72],
+    ["mushroom", "garlic", 0.8],
+    ["mushroom", "butter", 0.78],
+    ["spinach", "garlic", 0.75],
+    ["kale", "garlic", 0.74],
+    ["lemon", "olive oil", 0.85],
+    ["lime", "cilantro", 0.94],
+    ["orange", "cinnamon", 0.7],
+    ["berries", "yogurt", 0.75],
+    ["chocolate", "coffee", 0.8],
+    ["maple", "butter", 0.78],
+    ["honey", "yogurt", 0.7],
+    ["anchovies", "garlic", 0.82],
+    ["anchovies", "olive oil", 0.8],
+    ["capers", "lemon", 0.78],
+    ["olives", "feta", 0.76],
+    ["dijon", "honey", 0.72],
+    ["hot sauce", "lime", 0.75],
+    ["worcestershire", "garlic", 0.7],
+    ["coconut milk", "lime", 0.8],
+    ["coconut milk", "ginger", 0.78],
+    ["coconut milk", "cilantro", 0.74],
+    ["rice", "soy sauce", 0.7],
+    ["tortillas", "lime", 0.72],
+    ["tortillas", "cilantro", 0.74],
+    ["shrimp", "garlic", 0.82],
+    ["shrimp", "lime", 0.86],
+    ["tuna", "lemon", 0.78],
+    ["chicken", "garlic", 0.8],
+    ["chicken", "lemon", 0.76],
+    ["eggs", "butter", 0.8],
+    ["potato", "butter", 0.75],
+    ["broccoli", "garlic", 0.72],
+    ["bell pepper", "onion", 0.78],
+    ["jalapeno", "lime", 0.8],
+    ["jalapeno", "cilantro", 0.78],
   ];
   for (const [a, b, v] of pairs) {
     (CURATED[a] ??= {})[b] = v;
@@ -290,7 +457,11 @@ export function pairScore(a: string, b: string) {
   const co = CO_OCCURRENCE[na]?.[nb] ?? CO_OCCURRENCE[nb]?.[na] ?? 0;
   const shared = pa && pb ? pa.compounds.filter((c) => pb.compounds.includes(c)) : [];
   const synergyApplied = molecular > SYNERGY.molecularMin && co > SYNERGY.coMin;
-  const composite = 0.5 * molecular + 0.5 * co + (synergyApplied ? SYNERGY.bonus : 0);
+  let composite = 0.5 * molecular + 0.5 * co + (synergyApplied ? SYNERGY.bonus : 0);
+  // Sparse profiles lean slightly more on co-occurrence so the explorer stays useful.
+  if (pa?.coverage === "sparse" || pb?.coverage === "sparse") {
+    composite = 0.35 * molecular + 0.65 * co + (synergyApplied ? SYNERGY.bonus : 0);
+  }
   return {
     a,
     b,
@@ -304,12 +475,53 @@ export function pairScore(a: string, b: string) {
   };
 }
 
-export function bestPairsFor(name: string, limit = 5) {
-  return PROFILES.filter((p) => p.name !== canon(name))
-    .map((p) => ({ ...pairScore(name, p.name), displayName: p.displayName }))
+export function bestPairsFor(name: string, limit = 5, categoryFilter?: string) {
+  return PROFILES.filter((p) => {
+    if (p.name === canon(name)) return false;
+    if (categoryFilter && p.category !== categoryFilter) return false;
+    return true;
+  })
+    .map((p) => ({ ...pairScore(name, p.name), displayName: p.displayName, category: p.category }))
     .sort((x, y) => y.composite - x.composite)
     .slice(0, limit);
 }
+
+/** Rank inventory items against a focal ingredient. */
+export function rankInventoryPairs(
+  focal: string,
+  inventoryNames: string[],
+  limit = 8,
+) {
+  const unique = [...new Set(inventoryNames.map(canon).filter((n) => n !== canon(focal)))];
+  return unique
+    .map((n) => {
+      const score = pairScore(focal, n);
+      const prof = profileFor(n);
+      return {
+        ...score,
+        displayName: prof?.displayName ?? n,
+        category: prof?.category ?? "pantry",
+      };
+    })
+    .sort((a, b) => b.composite - a.composite)
+    .slice(0, limit);
+}
+
+/** Hand-picked high-signal bridges for the engagement surface. */
+export const FEATURED_BRIDGES: { a: string; b: string; hook: string }[] = [
+  { a: "bourbon", b: "angostura", hook: "Oak + baking spice — Old Fashioned bones" },
+  { a: "gin", b: "tonic", hook: "Juniper meets quinine — the highball default" },
+  { a: "tequila", b: "lime", hook: "Agave + sharp citrus — Margarita core" },
+  { a: "rum", b: "mint", hook: "Cane spirit + cooling leaf — Mojito path" },
+  { a: "campari", b: "sweet vermouth", hook: "Bitter orange + fortified wine — Negroni third" },
+  { a: "chickpeas", b: "tahini", hook: "Pulse + sesame — hummus foundation" },
+  { a: "tomato", b: "basil", hook: "Ripe fruit + herb oil — Caprese / sauce" },
+  { a: "garlic", b: "olive oil", hook: "Allium + green lipid — almost every savory start" },
+  { a: "cilantro", b: "lime", hook: "Citrus leaf + acid — Mexican / SE Asian bridge" },
+  { a: "bourbon", b: "chocolate", hook: "Vanilla-oak meets cocoa — dessert cocktail or board" },
+  { a: "mezcal", b: "lime", hook: "Smoke + acid — Oaxaca highball path" },
+  { a: "miso", b: "ginger", hook: "Fermented umami + rhizome heat" },
+];
 
 export function inventoryHarmony(names: string[]): number {
   if (names.length < 2) return 0.5;
@@ -326,4 +538,25 @@ export function inventoryHarmony(names: string[]): number {
 
 export function missingProfiles(names: string[]): string[] {
   return [...new Set(names)].filter((n) => !profileFor(n));
+}
+
+export function explainPair(score: ReturnType<typeof pairScore>): string {
+  const parts: string[] = [];
+  if (score.synergyApplied) {
+    parts.push("Both molecular overlap and recipe practice are elevated — synergy bonus applied.");
+  } else if (score.molecular > 0.3 && score.cooccurrence < 0.4) {
+    parts.push("Chemistry agrees more than the recipe corpus; try it as a deliberate bridge.");
+  } else if (score.cooccurrence > 0.6 && score.molecular < 0.2) {
+    parts.push("Cooks pair these often; shared volatiles in this curated set are still thin.");
+  } else if (score.composite >= 0.55) {
+    parts.push("Solid hybrid signal — worth exploring in the glass or on the plate.");
+  } else if (score.composite >= 0.35) {
+    parts.push("Moderate signal. Useful as a supporting note, not a starring pair.");
+  } else {
+    parts.push("Weak composite in this educational subset — do not force the pairing.");
+  }
+  if (score.coverageA === "sparse" || score.coverageB === "sparse") {
+    parts.push("One or both profiles are sparse, so the score leans on co-occurrence.");
+  }
+  return parts.join(" ");
 }
