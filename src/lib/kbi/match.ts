@@ -72,24 +72,80 @@ export function scoreRecipe(recipe: Recipe, items: InventoryItem[]): MatchHit {
     matchPct,
     expiryBoost: urgent,
     flavorScore,
-    composite,
+    composite: Number(composite.toFixed(3)),
     tier: missing.length === 0 ? "now" : "almost",
   };
 }
 
+/** Human-readable reason this hit ranked where it did. */
+export function explainRank(hit: MatchHit): string {
+  const parts: string[] = [];
+  if (hit.expiryBoost >= 0.8) parts.push("Uses something near expiry");
+  else if (hit.expiryBoost >= 0.4) parts.push("Uses something due this week");
+  if (hit.substituted.length) {
+    parts.push(
+      `Hierarchy: ${hit.substituted.map((s) => `${s.used} covers ${s.needed}`).join(", ")}`,
+    );
+  }
+  if (hit.flavorScore >= 0.7) parts.push("Strong flavor harmony");
+  else if (hit.flavorScore >= 0.55) parts.push("Solid flavor fit");
+  if (hit.recipe.minutes <= 15) parts.push("Quick");
+  if (hit.missing.length === 1) parts.push(`Only needs ${hit.missing[0]}`);
+  else if (hit.missing.length === 2) parts.push(`Needs ${hit.missing.join(" + ")}`);
+  if (!parts.length) {
+    return hit.tier === "now" ? "Everything required is on hand" : "Close — one or two ingredients away";
+  }
+  return parts.join(" · ");
+}
+
+/** Inventory items that are powering the expiry boost on this hit. */
+export function urgentForHit(hit: MatchHit, items: InventoryItem[]): InventoryItem[] {
+  const names = new Set([
+    ...hit.have,
+    ...hit.substituted.map((s) => s.used),
+  ]);
+  return items
+    .filter((i) => names.has(i.normalizedName) && expiryUrgency(i.expiry) >= 0.4)
+    .sort((a, b) => expiryUrgency(b.expiry) - expiryUrgency(a.expiry));
+}
+
+export type RankSort = "best" | "quickest" | "expiry";
+
 export function rankRecipes(
   items: InventoryItem[],
-  opts?: { kind?: "food" | "cocktail" | "all"; maxMissing?: number },
+  opts?: {
+    kind?: "food" | "cocktail" | "all";
+    maxMissing?: number;
+    maxMinutes?: number | null;
+    skill?: "easy" | "medium" | "involved" | "all";
+    sort?: RankSort;
+  },
 ): MatchHit[] {
   const kind = opts?.kind ?? "all";
   const maxMissing = opts?.maxMissing ?? 2;
-  return RECIPES.filter((r) => kind === "all" || r.kind === kind)
+  const maxMinutes = opts?.maxMinutes ?? null;
+  const skill = opts?.skill ?? "all";
+  const sort = opts?.sort ?? "best";
+
+  let hits = RECIPES.filter((r) => kind === "all" || r.kind === kind)
     .map((r) => scoreRecipe(r, items))
-    .filter((h) => h.missing.length <= maxMissing)
-    .sort((a, b) => {
-      if (a.tier !== b.tier) return a.tier === "now" ? -1 : 1;
+    .filter((h) => h.missing.length <= maxMissing);
+
+  if (maxMinutes != null) hits = hits.filter((h) => h.recipe.minutes <= maxMinutes);
+  if (skill !== "all") hits = hits.filter((h) => h.recipe.skill === skill);
+
+  return hits.sort((a, b) => {
+    if (a.tier !== b.tier) return a.tier === "now" ? -1 : 1;
+    if (sort === "quickest") {
+      if (a.recipe.minutes !== b.recipe.minutes) return a.recipe.minutes - b.recipe.minutes;
       return b.composite - a.composite;
-    });
+    }
+    if (sort === "expiry") {
+      if (a.expiryBoost !== b.expiryBoost) return b.expiryBoost - a.expiryBoost;
+      return b.composite - a.composite;
+    }
+    return b.composite - a.composite;
+  });
 }
 
 export function smartBuys(items: InventoryItem[], limit = 8): SmartBuy[] {
@@ -107,5 +163,19 @@ export function smartBuys(items: InventoryItem[], limit = 8): SmartBuy[] {
   return [...tallies.entries()]
     .map(([ingredient, unlocks]) => ({ ingredient, unlocks: [...unlocks] }))
     .sort((a, b) => b.unlocks.length - a.unlocks.length)
+    .slice(0, limit);
+}
+
+/** Near-expiry inventory that is currently unlocking Now recipes. */
+export function useFirstItems(items: InventoryItem[], hits: MatchHit[], limit = 5): InventoryItem[] {
+  const nowHits = hits.filter((h) => h.tier === "now" && h.expiryBoost >= 0.4);
+  const used = new Set<string>();
+  for (const hit of nowHits) {
+    for (const name of hit.have) used.add(name);
+    for (const s of hit.substituted) used.add(s.used);
+  }
+  return items
+    .filter((i) => used.has(i.normalizedName) && expiryUrgency(i.expiry) >= 0.4)
+    .sort((a, b) => expiryUrgency(b.expiry) - expiryUrgency(a.expiry))
     .slice(0, limit);
 }
