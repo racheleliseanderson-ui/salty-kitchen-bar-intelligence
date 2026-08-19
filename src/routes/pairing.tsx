@@ -56,9 +56,9 @@ function PairingPage() {
   return (
     <div className="app-shell space-y-8 py-8">
       <PageHeader
-        kicker="02 · Pairing data"
-        title="A hybrid molecular + co-occurrence engine can be bootstrapped now."
-        lede="Curated profiles stand in for FlavorDB / FooDB vectors. Type an ingredient to filter and select in one step. Explore pairs, rank against inventory, jump into classics, or hunt unexpected chemical bridges."
+        kicker="02 · Pairing"
+        title="Molecular overlap plus what cooks actually pair."
+        lede="Search an ingredient, inspect the chemistry, and rank it against what you already own. Classic bridges, unexpected chemistry, and the same scores Match uses."
       />
 
       <div className="panel-inset flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-sm text-stone-deep">
@@ -70,7 +70,7 @@ function PairingPage() {
           <span className="font-semibold text-navy-700">Last reviewed</span> {LAST_REVIEWED}
         </span>
         <span className="text-muted">·</span>
-        <span>Educational curated subset — not a live or licensed FlavorDB / FooDB extract.</span>
+        <span>Curated library — not a live or licensed FlavorDB / FooDB extract.</span>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -185,7 +185,7 @@ function PairingPage() {
               <Link to="/inventory" className="font-semibold text-heritage underline">
                 Open inventory
               </Link>{" "}
-              or seed the demo household first.
+              or restore the starter pantry first.
             </p>
           ) : inventoryRanks.length === 0 ? (
             <p className="mt-4 text-sm text-muted">

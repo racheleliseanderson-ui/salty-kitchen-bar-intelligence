@@ -26,7 +26,7 @@ export const SCENES: DemoScene[] = [
     id: "bar",
     title: "Bar shelf",
     location: "bar_shelf",
-    blurb: "Multi-bottle photo. Brand + spirit type + confidence — the Home Bar Hero pattern. Glare and similar shapes still need a human pass.",
+    blurb: "Multi-bottle photo. Brand, spirit type, and confidence. Glare and similar shapes still need a human pass.",
     lighting: "Angled, some glare on glass",
     detections: [
       d("bar-makers", { label: "Maker's Mark", normalizedName: "bourbon", category: "spirit", location: "bar_shelf", confidence: 0.94, box: { x: 4, y: 16, w: 12, h: 64 } }),

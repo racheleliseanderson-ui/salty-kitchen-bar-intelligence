@@ -98,7 +98,7 @@ function p(
     compounds,
     notes,
     coverage,
-    sourceNote: "Curated educational stand-in",
+    sourceNote: "Curated molecular + co-occurrence profile",
   };
 }
 
@@ -653,7 +653,7 @@ export function explainPair(score: PairScore): string {
   } else if (score.composite >= 0.35) {
     parts.push("Moderate signal. Useful as a supporting note, not a starring pair.");
   } else {
-    parts.push("Weak composite in this educational subset — do not force the pairing.");
+    parts.push("Weak composite — do not force the pairing.");
   }
   if (score.coverageA === "sparse" || score.coverageB === "sparse") {
     parts.push("One or both profiles are sparse, so the score leans on co-occurrence.");

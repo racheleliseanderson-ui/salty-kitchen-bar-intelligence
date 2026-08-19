@@ -126,8 +126,8 @@ function HandoffPage() {
         </div>
         {sent ? (
           <div className="alert alert-info mt-4">
-            Packet {shown.handoff_id.slice(0, 8)} is ready. Open Occasions yourself — this desk
-            does not post across tools.
+            Packet {shown.handoff_id.slice(0, 8)} is ready. Open Occasions yourself — nothing
+            posts across tools.
             <a
               href={OCCASIONS_ARCHITECTURE_URL}
               className="mt-2 inline-flex font-semibold text-heritage underline-offset-4 hover:underline"

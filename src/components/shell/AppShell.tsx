@@ -7,7 +7,7 @@ import { rehydrateInventory } from "@/lib/kbi/store";
 import { OCCASIONS_URL, SALT_NOTES_URL } from "@/lib/kbi/types";
 
 const NAV = [
-  { to: "/", label: "Report" },
+  { to: "/", label: "Home" },
   { to: "/vision", label: "Vision" },
   { to: "/pairing", label: "Pairing" },
   { to: "/inventory", label: "Inventory" },
@@ -51,8 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <div className="min-w-0 text-left">
                 <p className="eyebrow leading-none">Salty & Clever</p>
                 <p className="mt-0.5 truncate text-sm text-muted">
-                  Kitchen & Bar
-                  <span className="text-muted-soft"> · SC-KBI-001</span>
+                  Kitchen & Bar Intelligence
                 </p>
               </div>
             </Link>
@@ -102,10 +101,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="max-w-xl space-y-1.5">
             <p className="eyebrow">Trust boundary</p>
             <p className="text-sm leading-relaxed text-muted">
-              Educational planning only. Vision scores are demo or user-confirmed.
+              Planning tool, not a safety system. Scan suggestions stay suggestions until you confirm.
               Pairing is a curated molecular + co-occurrence model, not a lab assay.
-              No allergen safety, nutrition, or pricing claims. Local-first unless you
-              sign in and save a household.
+              No allergen, nutrition, or pricing claims. Inventory stays on this device unless you
+              sign in and save.
             </p>
           </div>
           <p className="text-xs text-muted-soft">

@@ -7,39 +7,39 @@ const SECTIONS = [
   {
     to: "/vision",
     kicker: "01",
-    title: "Vision tech",
-    body: "Phone multi-item scanning is already shipping. Bar is stronger; pantry is usable with confirmation.",
+    title: "Vision",
+    body: "Scan a shelf or fridge, review every candidate, then commit. Bar reads cleaner; crowded pantries still need your eyes.",
     icon: Camera,
-    verdict: "Feasible",
+    verdict: "Live",
   },
   {
     to: "/pairing",
     kicker: "02",
-    title: "Pairing sources",
-    body: "FlavorDB + FooDB + recipe co-occurrence. Hybrid molecular scoring, explainable, brand-fit.",
+    title: "Pairing",
+    body: "Molecular overlap plus recipe co-occurrence. Explainable scores, classic bridges, and unexpected chemistry.",
     icon: FlaskConical,
-    verdict: "Highly feasible",
+    verdict: "Live",
   },
   {
     to: "/inventory",
     kicker: "03",
     title: "Inventory + match",
-    body: "Local-first model, review/edit, expiry ranking, Almost, and Smart Buy — food and bar together.",
+    body: "Local-first pantry and bar. Review, edit, expiry ranking, Almost, and Smart Buy — food and drink together.",
     icon: ScanSearch,
-    verdict: "Prototype live",
+    verdict: "Live",
   },
   {
     to: "/handoff",
     kicker: "04",
     title: "Occasions packet",
-    body: "Availability Packet 1.0. User-initiated only. No recipes, no allergen claims, no silent inference.",
+    body: "Availability Packet 1.0. You send it. No recipes, no allergen claims, no silent inference.",
     icon: Handshake,
-    verdict: "Contract 1.0",
+    verdict: "Packet 1.0",
   },
   {
     to: "/teardown",
     kicker: "05",
-    title: "Competitive field",
+    title: "The field",
     body: "Home Bar Hero, Chefs AI, CompKitchen, pantry apps. The gap we own is unification + science + truth.",
     icon: Swords,
     verdict: "Clear gap",
@@ -51,18 +51,18 @@ function Home() {
     <div className="app-shell py-8 sm:py-12">
       <section className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
         <div>
-          <p className="eyebrow">Validation report · August 2026</p>
+          <p className="eyebrow">Kitchen & Bar · Salty & Clever</p>
           <h1 className="mt-3 font-display text-4xl leading-[1.05] sm:text-5xl">
-            Kitchen & Bar Intelligence is the lowest-risk path beside Occasions.
+            See the shelf. Rank the pour. Hand off the occasion.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-stone-deep sm:text-lg">
-            Phone vision, open pairing databases, and a local inventory already
-            support a daily food + drink layer. This desk turns the research into
-            a working prototype and a clean handoff contract.
+            Scan, confirm, and cook from one pantry and bar. Pairing is explainable
+            chemistry plus recipe practice. Occasions stays the planner — this layer
+            is daily execution.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link to="/inventory" className="btn btn-primary">
-              Open the prototype
+              Open inventory
               <ArrowRight className="size-4" />
             </Link>
             <Link to="/match" className="btn btn-secondary">
@@ -72,9 +72,9 @@ function Home() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { n: "90s", l: "Bar mAP band" },
-            { n: "65–75%", l: "Hard pantry scenes" },
-            { n: "50/50", l: "Molecule + recipe" },
+            { n: "90s", l: "Bar shelf reads" },
+            { n: "65–75%", l: "Hard fridge scenes" },
+            { n: "35/65", l: "Molecule + recipe" },
             { n: "1.0", l: "Availability packet" },
           ].map((m) => (
             <div key={m.l} className="metric">
@@ -115,10 +115,9 @@ function Home() {
       </section>
 
       <aside className="alert alert-info mt-8">
-        Findings draw from 2025–2026 commercial deployments, academic benchmarks,
-        open databases, app reviews, and production examples. Occasions remains
-        the occasion planner — Architecture, Plan, Card. This layer handles daily
-        execution.
+        Occasions remains the occasion planner — Architecture, Plan, Card. This
+        layer handles daily execution: what is on the shelf, what pairs, and what
+        you can make tonight.
       </aside>
     </div>
   );

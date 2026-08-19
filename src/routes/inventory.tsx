@@ -6,10 +6,21 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { loadHousehold, saveHousehold } from "@/lib/kbi/server";
 import { useInventory } from "@/lib/kbi/store";
 import { urgencyLabel } from "@/lib/kbi/match";
-import type { Category, InventoryItem, Location, Unit } from "@/lib/kbi/types";
+import type { Category, InventoryItem, Location, Source, Unit } from "@/lib/kbi/types";
 import { cn, formatDate } from "@/lib/utils";
 
 export const Route = createFileRoute("/inventory")({ component: InventoryPage });
+
+const SOURCE_LABEL: Record<Source, string> = {
+  vision: "scan",
+  barcode: "barcode",
+  manual: "manual",
+  demo: "starter",
+};
+
+function sourceLabel(source: Source) {
+  return SOURCE_LABEL[source] ?? source;
+}
 
 const LOCATIONS: Location[] = ["bar_shelf", "fridge", "pantry", "freezer"];
 const CATEGORIES: Category[] = [
@@ -73,8 +84,8 @@ function InventoryPage() {
       <Toaster richColors position="top-center" />
       <PageHeader
         kicker="03 · Inventory"
-        title="Local-first pantry and bar, with a mandatory review step."
-        lede="Demo household is loaded so ranking is immediately true. Edits persist in this browser. Sign in to save a household copy."
+        title="Local-first pantry and bar. You confirm before anything is truth."
+        lede="A starter pantry is loaded so Match has something real to rank. Edits stay in this browser. Sign in to save a household copy."
       />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -107,7 +118,7 @@ function InventoryPage() {
           Scan a shelf
         </Link>
         <button type="button" className="btn btn-ghost btn-sm" onClick={resetDemo}>
-          Reset demo
+          Restore starter pantry
         </button>
         {user ? (
           <>
@@ -145,7 +156,7 @@ function InventoryPage() {
                 <UrgencyBadge expiry={item.expiry} />
               </div>
               <p className="mt-3 text-sm text-stone-deep">
-                {item.quantity.value} {item.quantity.unit} · {item.location.replace("_", " ")} · {item.source}
+                {item.quantity.value} {item.quantity.unit} · {item.location.replace("_", " ")} · {sourceLabel(item.source)}
                 {item.confidence < 1 ? ` · ${Math.round(item.confidence * 100)}%` : ""}
               </p>
               <p className="mt-1 text-xs text-muted">

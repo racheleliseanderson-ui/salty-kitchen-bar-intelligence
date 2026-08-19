@@ -6,7 +6,7 @@ import { APP_NAME } from "@/lib/kbi/types";
 import appCss from "../styles.css?url";
 
 const APP_DESCRIPTION =
-  "Validation desk for Kitchen & Bar Intelligence: vision feasibility, pairing sources, inventory + match prototype, Occasions handoff, and competitive teardowns.";
+  "Kitchen & Bar Intelligence from Salty & Clever — scan the shelf, confirm what you own, pair with chemistry and recipe practice, and hand off to Occasions.";
 const host = import.meta.env.VITE_PUBLIC_HOSTNAME;
 const ogImage = host ? `https://${host}/og.jpg` : undefined;
 

@@ -72,7 +72,7 @@ export const COCKTAIL_RECIPES: Recipe[] = [
   r("negroni-sbagliato", "Negroni Sbagliato", "cocktail", ["campari", "sweet vermouth", "prosecco"], ["orange"], 2, "easy", "Mistaken Negroni."),
   r("mimosa", "Mimosa", "cocktail", ["prosecco", "orange"], [], 2, "easy", "Brunch path."),
   r("champagne-cocktail", "Champagne cocktail", "cocktail", ["prosecco", "sugar", "angostura"], [], 3, "easy", "Bitters and bubbles."),
-  r("mint-julep", "Mint julep", "cocktail", ["bourbon", "mint", "sugar"], [], 6, "medium", "Mint is in the demo fridge."),
+  r("mint-julep", "Mint julep", "cocktail", ["bourbon", "mint", "sugar"], [], 6, "medium", "Mint is in the fridge."),
   r("southside", "Southside", "cocktail", ["gin", "mint", "lime", "simple syrup"], [], 5, "medium", "Second mint unlock."),
   r("whiskey-smash", "Whiskey smash", "cocktail", ["bourbon", "mint", "lemon", "sugar"], [], 6, "medium", "Third mint unlock."),
   r("last-word", "Last Word", "cocktail", ["gin", "chartreuse", "maraschino", "lime"], [], 4, "medium", "Chartreuse Smart Buy."),

@@ -78,8 +78,8 @@ function MatchPage() {
                 <strong>Expiry</strong> — boost when the recipe uses something due within ~2 weeks.
               </li>
               <li>
-                <strong>Flavor</strong> — 50/50 molecular overlap + recipe co-occurrence among on-hand
-                ingredients; strongest pair is named on the card.
+                <strong>Flavor</strong> — 35% molecular overlap + 65% recipe co-occurrence among
+                on-hand required ingredients; strongest pair is named on the card.
               </li>
               <li>
                 <strong>Hierarchy</strong> — rye may cover bourbon, lemon may cover lime; each swap
@@ -103,7 +103,7 @@ function MatchPage() {
         <section className="panel-surface p-6 text-center">
           <p className="font-display text-2xl">No inventory yet</p>
           <p className="mt-2 text-sm text-stone-deep">
-            Load the demo household or add a few items so ranking has something true to work with.
+            Restore the starter pantry or add a few items so ranking has something true to work with.
           </p>
           <Link to="/inventory" className="btn btn-primary mt-4 inline-flex">
             Open inventory

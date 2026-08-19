@@ -10,7 +10,7 @@ function TeardownPage() {
       <PageHeader
         kicker="05 · Competitive field"
         title="The market proves the pieces. Nobody owns the union."
-        lede="Home Bar Hero owns bottle vision. Chefs AI owns kitchen chemistry. Pantry apps own lists and then lose the truth. The layer we can ship is unified inventory, persistent edit UX, and an explainable pairing graph."
+        lede="Home Bar Hero owns bottle vision. Chefs AI owns kitchen chemistry. Pantry apps own lists and then lose the truth. We ship unified inventory, persistent edit, and an explainable pairing graph."
       />
 
       <div className="overflow-x-auto panel-surface">
@@ -93,10 +93,10 @@ function TeardownPage() {
 
       <div className="flex flex-wrap gap-3">
         <Link to="/inventory" className="btn btn-primary">
-          Run the prototype
+          Open inventory
         </Link>
         <Link to="/" className="btn btn-secondary">
-          Back to the report
+          Back home
         </Link>
       </div>
     </div>

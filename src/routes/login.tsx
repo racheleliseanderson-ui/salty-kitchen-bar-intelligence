@@ -10,8 +10,8 @@ function Login() {
         <p className="eyebrow">Salty & Clever</p>
         <h1 className="mt-2 font-display text-3xl">Sign in</h1>
         <p className="mt-2 text-sm text-stone-deep">
-          Optional. The desk works locally. Sign in only if you want a household
-          inventory saved to your account.
+          Optional. Inventory works on this device without an account. Sign in
+          only if you want a household copy saved to your account.
         </p>
         <div className="mt-6 space-y-3">
           {authEnabled ? (
@@ -30,7 +30,7 @@ function Login() {
           )}
         </div>
         <Link to="/" className="btn btn-ghost mt-4 w-full">
-          Back to the report
+          Back home
         </Link>
       </div>
     </div>

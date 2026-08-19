@@ -50,7 +50,7 @@ export const FOOD_RECIPES: Recipe[] = [
   r("feta-watermelon", "Feta cucumber salad", "food", ["feta", "cucumber", "lemon", "olive oil"], ["mint"], 10, "easy", "Feta unlock. Crisp and salty."),
   r("baked-feta", "Baked feta with tomato", "food", ["feta", "tomato", "olive oil", "garlic"], [], 25, "easy", "One pan."),
   r("tahini-toast", "Tahini honey toast", "food", ["bread", "tahini", "honey"], ["butter"], 5, "easy", "Breakfast path."),
-  r("white-wine-mussels", "White wine shallot pan", "food", ["white wine", "shallot", "butter", "garlic"], ["parsley"], 15, "medium", "White wine already in the demo fridge."),
+  r("white-wine-mussels", "White wine shallot pan", "food", ["white wine", "shallot", "butter", "garlic"], ["parsley"], 15, "medium", "White wine already in the fridge."),
   r("avocado-eggs", "Avocado eggs", "food", ["avocado", "eggs", "bread"], ["chili flakes"], 10, "easy", "Near-expiry avocado."),
   r("mozzarella-tomato-pasta", "Fresh tomato mozzarella pasta", "food", ["pasta", "tomato", "mozzarella", "basil", "olive oil"], ["garlic"], 20, "easy", "Cheese family."),
   r("bean-chili", "Black bean chili", "food", ["black beans", "tomato", "onion", "cumin", "chili flakes"], ["cheddar"], 35, "easy", "Pantry heat."),

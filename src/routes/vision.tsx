@@ -158,8 +158,8 @@ function VisionPage() {
   return (
     <div className="app-shell space-y-8 py-8">
       <PageHeader
-        kicker="01 · Vision tech"
-        title="Feasible for MVP. Confirmation is the product."
+        kicker="01 · Vision"
+        title="Review every scan before it becomes inventory."
         lede={VISION.verdict}
       />
 
@@ -200,7 +200,7 @@ function VisionPage() {
       <section className="panel-surface p-5 sm:p-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="section-label">Prototype scan · review workflow</p>
+            <p className="section-label">Scan review</p>
             <h2 className="mt-1 font-display text-2xl">Review before it becomes truth</h2>
           </div>
           <p className="text-sm text-muted">
@@ -463,14 +463,14 @@ function VisionPage() {
                 setCommittedIds([]);
               }}
             >
-              Review another scene
+              Review another shelf
             </button>
           </div>
         )}
       </section>
 
       <section>
-        <p className="section-label">Implementation path</p>
+        <p className="section-label">How vision works</p>
         <ol className="mt-3 space-y-2">
           {VISION.path.map((stepText, i) => (
             <li key={stepText} className="flex gap-3 text-sm leading-relaxed text-stone-deep">
