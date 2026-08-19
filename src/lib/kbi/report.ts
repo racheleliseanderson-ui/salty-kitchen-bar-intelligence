@@ -61,5 +61,5 @@ export const METHOD_NOTES = [
   "Sources, formula, data version, and limits are always visible: matrix effects, cooking transformations, sparsity, cultural bias, license constraints.",
   "Any generative suggestion must be constrained by these scores so unsupported pairs cannot be invented.",
   "Match flavorScore uses the same pair table but blends 35% molecular / 65% co-occurrence on required on-hand pairs, so ranking tracks the denser corpus.",
-  "Unexpected bridges: IDF molecular ≥ 0.25 with co-occurrence still below 0.40 — chemistry without (yet) a recipe habit.",
+  "Unexpected bridges: high IDF molecular with co-occurrence still below 0.40, ranked by gap then by rarity of shared compounds — chemistry without (yet) a recipe habit. Edge pairs are sensory-plausible experiments, not guarantees.",
 ];
