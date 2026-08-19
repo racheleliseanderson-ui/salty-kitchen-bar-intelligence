@@ -52,14 +52,14 @@ export const PAIRING_SOURCES = [
 
 /** Hybrid used by the pairing explorer. */
 export const METHOD_NOTES = [
-  "Score = hybrid of (A) molecular Jaccard and (B) recipe co-occurrence, plus a synergy bonus when both are high.",
-  "(A) Molecular: Jaccard on shared volatiles from the curated FlavorDB/FooDB-style library.",
+  "Score = hybrid of (A) IDF-weighted molecular Jaccard and (B) recipe co-occurrence, plus a synergy bonus when both are high.",
+  "(A) Molecular: IDF-weighted Jaccard on shared volatiles — rare compounds count more than ubiquitous ones (hexanal, ethanol).",
   "(B) Co-occurrence: NPMI-style statistics over open recipe collections and classic pairs (not proprietary menus).",
   "Default blend is 50/50. Sparse profiles lean 35/65 toward co-occurrence so ranking stays useful while chemistry density is incomplete.",
-  "Synergy bonus: +0.08 only when Molecular Jaccard > 0.25 AND Recipe co-occurrence > 0.5. Never invents chemistry from one side alone.",
+  "Synergy bonus: +0.08 only when IDF molecular > 0.25 AND Recipe co-occurrence > 0.5. Never invents chemistry from one side alone.",
   "Coverage labels (rich / moderate / sparse) mark how dense each profile is.",
   "Sources, formula, data version, and limits are always visible: matrix effects, cooking transformations, sparsity, cultural bias, license constraints.",
   "Any generative suggestion must be constrained by these scores so unsupported pairs cannot be invented.",
   "Match flavorScore uses the same pair table but blends 35% molecular / 65% co-occurrence on required on-hand pairs, so ranking tracks the denser corpus.",
-  "Unexpected bridges: molecular Jaccard ≥ 0.25 with co-occurrence still below 0.40 — chemistry without (yet) a recipe habit.",
+  "Unexpected bridges: IDF molecular ≥ 0.25 with co-occurrence still below 0.40 — chemistry without (yet) a recipe habit.",
 ];
