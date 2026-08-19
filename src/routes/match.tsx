@@ -89,7 +89,7 @@ function MatchPage() {
       </section>
 
       <Link to="/handoff" className="btn btn-primary">
-        Send availability to Menu Builder
+        Send availability to Occasions
       </Link>
     </div>
   );

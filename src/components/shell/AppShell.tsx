@@ -4,7 +4,7 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { UserButton } from "@/lib/auth/gates";
 import { cn } from "@/lib/utils";
 import { rehydrateInventory } from "@/lib/kbi/store";
-import { SALT_NOTES_URL } from "@/lib/kbi/types";
+import { OCCASIONS_URL, SALT_NOTES_URL } from "@/lib/kbi/types";
 
 const NAV = [
   { to: "/", label: "Report" },
@@ -78,6 +78,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               );
             })}
             <a
+              href={OCCASIONS_URL}
+              className="shrink-0 rounded-lg px-3 py-2 text-sm text-muted hover:bg-surface hover:text-ink"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Occasions
+            </a>
+            <a
               href={SALT_NOTES_URL}
               className="shrink-0 rounded-lg px-3 py-2 text-sm text-muted hover:bg-surface hover:text-ink"
               target="_blank"
@@ -101,7 +109,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </p>
           </div>
           <p className="text-xs text-muted-soft">
-            Layer 0.1.0 · Packet 1.0 · Menu Builder contract 1.1.0
+            Layer 0.1.0 · Packet 1.0 · Occasions Architecture
           </p>
         </div>
       </footer>

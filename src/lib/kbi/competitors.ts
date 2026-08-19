@@ -93,6 +93,6 @@ export const GAPS = [
   "Vision plus a persistent edit UX that solves pantry truth",
   "Molecular + co-occurrence flavor layer with explanations",
   "Ranking that actually uses expiry and real availability",
-  "Optional, explicit, lightweight handoff to Menu Builder",
+  "Optional, explicit, lightweight handoff to Occasions",
   "Local-first, privacy-respecting defaults",
 ];

@@ -4,7 +4,7 @@ import { toast, Toaster } from "sonner";
 import { PageHeader } from "@/components/kbi/PageHeader";
 import { CONTRACT_RULES, buildPacket, validatePacket } from "@/lib/kbi/handoff";
 import { useInventory } from "@/lib/kbi/store";
-import { MENU_BUILDER_URL, type AvailabilityPacket, type UserIntent } from "@/lib/kbi/types";
+import { OCCASIONS_ARCHITECTURE_URL, type AvailabilityPacket, type UserIntent } from "@/lib/kbi/types";
 import { downloadText } from "@/lib/utils";
 
 export const Route = createFileRoute("/handoff")({ component: HandoffPage });
@@ -54,7 +54,7 @@ function HandoffPage() {
       <PageHeader
         kicker="04 · Handoff"
         title="Availability Packet 1.0 — user-initiated, nothing silent."
-        lede="Menu Builder stays the deterministic stress-test. This layer only forwards what is on the shelf and what the user has declared."
+        lede="Occasions stays the occasion planner — Architecture is the five-role menu stress-test. This layer only forwards what is on the shelf and what the user has declared."
       />
 
       <ul className="grid gap-3 sm:grid-cols-2">
@@ -104,7 +104,7 @@ function HandoffPage() {
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <button type="button" className="btn btn-primary" onClick={send}>
-            Send to Menu Builder
+            Send to Occasions
           </button>
           <button
             type="button"
@@ -126,15 +126,15 @@ function HandoffPage() {
         </div>
         {sent ? (
           <div className="alert alert-info mt-4">
-            Packet {shown.handoff_id.slice(0, 8)} is ready. Open Menu Builder yourself — this desk
+            Packet {shown.handoff_id.slice(0, 8)} is ready. Open Occasions yourself — this desk
             does not post across tools.
             <a
-              href={MENU_BUILDER_URL}
+              href={OCCASIONS_ARCHITECTURE_URL}
               className="mt-2 inline-flex font-semibold text-heritage underline-offset-4 hover:underline"
               target="_blank"
               rel="noreferrer"
             >
-              Open Menu Builder
+              Open Occasions Architecture
             </a>
           </div>
         ) : (

@@ -64,10 +64,10 @@ function inspect(value: unknown, found: string[]) {
 }
 
 export const CONTRACT_RULES = [
-  "User must actively choose Send to Menu Builder. No silent inference.",
+  "User must actively choose Send to Occasions. No silent inference.",
   "Packet contains availability and declared constraints only.",
   "Never include generated recipes, allergen guarantees, pricing, or nutrition claims.",
-  "Menu Builder may refuse, simplify, or ignore the packet. Tools stay independent.",
+  "Occasions may refuse, simplify, or ignore the packet. Daily inventory and occasion planning stay independent.",
   "Reverse handoff, if ever needed, stays equally explicit.",
   "Local history only unless the user signs in and chooses to persist.",
 ];

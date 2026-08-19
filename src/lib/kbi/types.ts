@@ -1,7 +1,8 @@
 export const APP_ID = "SC-KBI-001";
 export const APP_NAME = "Kitchen & Bar · Salty & Clever";
 export const PACKET_VERSION = "1.0";
-export const MENU_BUILDER_URL = "https://salty-menu-builder.vercel.app/";
+export const OCCASIONS_URL = "https://occasion.saltnotes.blog";
+export const OCCASIONS_ARCHITECTURE_URL = "https://occasion.saltnotes.blog/architecture";
 export const SALT_NOTES_URL = "https://saltnotes.blog";
 
 export type Category =

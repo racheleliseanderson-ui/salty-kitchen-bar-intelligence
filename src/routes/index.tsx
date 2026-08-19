@@ -31,7 +31,7 @@ const SECTIONS = [
   {
     to: "/handoff",
     kicker: "04",
-    title: "Menu Builder packet",
+    title: "Occasions packet",
     body: "Availability Packet 1.0. User-initiated only. No recipes, no allergen claims, no silent inference.",
     icon: Handshake,
     verdict: "Contract 1.0",
@@ -53,7 +53,7 @@ function Home() {
         <div>
           <p className="eyebrow">Validation report · August 2026</p>
           <h1 className="mt-3 font-display text-4xl leading-[1.05] sm:text-5xl">
-            Kitchen & Bar Intelligence is the lowest-risk path beside Menu Builder.
+            Kitchen & Bar Intelligence is the lowest-risk path beside Occasions.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-stone-deep sm:text-lg">
             Phone vision, open pairing databases, and a local inventory already
@@ -116,8 +116,9 @@ function Home() {
 
       <aside className="alert alert-info mt-8">
         Findings draw from 2025–2026 commercial deployments, academic benchmarks,
-        open databases, app reviews, and production examples. Menu Builder remains
-        the deterministic occasion tool. This layer handles daily execution.
+        open databases, app reviews, and production examples. Occasions remains
+        the occasion planner — Architecture, Plan, Card. This layer handles daily
+        execution.
       </aside>
     </div>
   );
