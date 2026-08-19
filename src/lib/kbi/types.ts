@@ -162,6 +162,45 @@ export interface SmartBuy {
   unlocks: string[];
 }
 
+/** One factor-level difference when comparing two ranked hits. */
+export interface ContrastDelta {
+  key: RankFactorKey | "composite" | "tier";
+  label: string;
+  /** Value on the higher-ranked (winner) side, human-readable. */
+  winnerValue: string;
+  /** Value on the lower-ranked side. */
+  loserValue: string;
+  /** Who this factor favors. */
+  advantage: "winner" | "loser" | "tie";
+  detail: string;
+}
+
+/** Contrastive explanation: why recipe A ranks above recipe B. */
+export interface ContrastExplanation {
+  winnerId: string;
+  loserId: string;
+  winnerName: string;
+  loserName: string;
+  compositeDelta: number;
+  summary: string;
+  deltas: ContrastDelta[];
+}
+
+/** Counterfactual: what happens to ranking if one missing ingredient is added. */
+export interface CounterfactualPreview {
+  ingredient: string;
+  currentNow: number;
+  projectedNow: number;
+  deltaNow: number;
+  currentAlmost: number;
+  projectedAlmost: number;
+  /** Recipe names that flip from Almost → Now after the add. */
+  newlyNow: string[];
+  /** Recipes that still need something else after the add. */
+  stillAlmost: string[];
+  summary: string;
+}
+
 export interface PacketIngredient {
   normalized_name: string;
   quantity_hint: string;
