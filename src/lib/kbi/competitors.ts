@@ -9,6 +9,8 @@ export const COMPETITORS: Competitor[] = [
     bar: true,
     vision: true,
     chemistry: false,
+    url: "https://homebarhero.ai/",
+    sourceNote: "Official product site — multi-bottle vision, inventory match, Open Bar.",
     strengths: [
       "Multi-bottle vision, up to 10 in one frame",
       "Inventory-aware matching with spirit hierarchy",
@@ -31,6 +33,8 @@ export const COMPETITORS: Competitor[] = [
     bar: false,
     vision: false,
     chemistry: true,
+    url: "https://chefs-ai.com/",
+    sourceNote: "Official product — Flavor Harmony Score and constrained generation.",
     strengths: [
       "Live Flavor Harmony Score from a knowledge graph",
       "One-best-addition and expiry-first pantry",
@@ -52,6 +56,8 @@ export const COMPETITORS: Competitor[] = [
     bar: false,
     vision: false,
     chemistry: true,
+    url: "https://compkitchen.com/tools",
+    sourceNote: "Official tools + FAQ — molecular overlap + recipe co-occurrence; sources published.",
     strengths: [
       "Transparent molecular scoring from papers and databases",
       "High-overlap / low-co-occurrence surprises",
@@ -73,6 +79,8 @@ export const COMPETITORS: Competitor[] = [
     bar: false,
     vision: true,
     chemistry: false,
+    url: "https://kitchenpalapp.com/en/",
+    sourceNote: "KitchenPal official site (class also includes SuperCook-style what-can-I-make apps).",
     strengths: [
       "Barcode and photo entry",
       "Shared lists and basic what-can-I-make",
