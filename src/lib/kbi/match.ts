@@ -72,7 +72,7 @@ export function scoreRecipe(recipe: Recipe, items: InventoryItem[]): MatchHit {
     matchPct,
     expiryBoost: urgent,
     flavorScore,
-    composite: Number(composite.toFixed(3)),
+    composite,
     tier: missing.length === 0 ? "now" : "almost",
   };
 }
@@ -81,8 +81,8 @@ export function rankRecipes(
   items: InventoryItem[],
   opts?: { kind?: "food" | "cocktail" | "all"; maxMissing?: number },
 ): MatchHit[] {
-  const maxMissing = opts?.maxMissing ?? 2;
   const kind = opts?.kind ?? "all";
+  const maxMissing = opts?.maxMissing ?? 2;
   return RECIPES.filter((r) => kind === "all" || r.kind === kind)
     .map((r) => scoreRecipe(r, items))
     .filter((h) => h.missing.length <= maxMissing)
@@ -92,7 +92,7 @@ export function rankRecipes(
     });
 }
 
-export function smartBuys(items: InventoryItem[], limit = 4): SmartBuy[] {
+export function smartBuys(items: InventoryItem[], limit = 8): SmartBuy[] {
   const names = haveSet(items);
   const tallies = new Map<string, Set<string>>();
   for (const recipe of RECIPES) {

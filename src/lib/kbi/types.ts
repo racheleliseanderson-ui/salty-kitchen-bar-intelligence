@@ -1,6 +1,7 @@
 export const APP_ID = "SC-KBI-001";
 export const APP_NAME = "Kitchen & Bar · Salty & Clever";
 export const PACKET_VERSION = "1.0";
+export const SEED_VERSION = 6;
 export const OCCASIONS_URL = "https://occasion.saltnotes.blog";
 export const OCCASIONS_ARCHITECTURE_URL = "https://occasion.saltnotes.blog/architecture";
 export const SALT_NOTES_URL = "https://saltnotes.blog";
@@ -98,36 +99,21 @@ export interface SmartBuy {
   unlocks: string[];
 }
 
-export interface AvailabilityIngredient {
-  normalized_name: string;
-  quantity_hint: string;
-  expiry_urgency: ExpiryUrgency;
+export interface AvailabilityItem {
+  normalizedName: string;
+  displayName: string;
+  category: Category;
+  quantity?: Quantity;
+  expiry?: string | null;
+  location?: Location;
+  confidence?: number;
+  userIntent?: UserIntent;
 }
 
 export interface AvailabilityPacket {
-  contract_version: typeof PACKET_VERSION;
-  timestamp: string;
-  source: "KitchenBarLayer";
-  application_id: typeof APP_ID;
-  user_intent: UserIntent;
-  available_ingredients: AvailabilityIngredient[];
-  hard_user_constraints: string[];
-  optional_notes: string[];
-  handoff_id: string;
-}
-
-export interface Competitor {
-  id: string;
-  name: string;
-  role: string;
-  strengths: string[];
-  limits: string[];
-  food: boolean;
-  bar: boolean;
-  vision: boolean;
-  chemistry: boolean;
-  /** Official product / methodology URL when available. */
-  url?: string;
-  /** Short provenance note for the primary link. */
-  sourceNote?: string;
+  version: typeof PACKET_VERSION;
+  appId: typeof APP_ID;
+  generatedAt: string;
+  items: AvailabilityItem[];
+  notes?: string;
 }
