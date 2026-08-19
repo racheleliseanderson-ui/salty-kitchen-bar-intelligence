@@ -2,16 +2,15 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/kbi/PageHeader";
 import {
-  explainRank,
+  buildBreakdown,
   rankRecipes,
   smartBuys,
-  urgentForHit,
   useFirstItems,
   urgencyLabel,
   type RankSort,
 } from "@/lib/kbi/match";
 import { useInventory } from "@/lib/kbi/store";
-import type { MatchHit, SmartBuy } from "@/lib/kbi/types";
+import type { InventoryItem, MatchHit, RankBreakdown, RankFactor, SmartBuy } from "@/lib/kbi/types";
 import { cn, daysUntil, formatDate } from "@/lib/utils";
 
 export const Route = createFileRoute("/match")({ component: MatchPage });
@@ -50,10 +49,9 @@ function MatchPage() {
       <PageHeader
         kicker="03 · Match"
         title="What you can make now, almost, and with one bottle."
-        lede="Ranked from your local inventory — match × expiry urgency × flavor harmony, with spirit and produce hierarchy. Nothing is generated. The corpus is curated."
+        lede="Ranked from your local inventory — match × expiry urgency × flavor harmony, with spirit and produce hierarchy. Open any card’s Why this rank for the full factor breakdown."
       />
 
-      {/* How it works */}
       <section className="panel-surface overflow-hidden">
         <button
           type="button"
@@ -62,10 +60,10 @@ function MatchPage() {
           aria-expanded={showHow}
         >
           <div>
-            <p className="section-label">How to use this page</p>
+            <p className="section-label">How ranking works</p>
             <p className="mt-1 text-sm text-stone-deep">
-              Start with <strong>Now</strong>, check <strong>Use first</strong> for near-expiry,
-              then scan <strong>Almost</strong> and <strong>Smart Buy</strong> if you want more options.
+              Composite = coverage × expiry boost × flavor harmony × hierarchy penalty + time bias.
+              Every card can show the factors that moved it.
             </p>
           </div>
           <span className="badge badge-comfortable shrink-0">{showHow ? "Hide" : "Details"}</span>
@@ -74,28 +72,28 @@ function MatchPage() {
           <div className="border-t border-line px-5 py-4 text-sm leading-relaxed text-stone-deep">
             <ol className="list-decimal space-y-2 pl-5">
               <li>
-                <strong>Now</strong> — every required ingredient is on hand (or covered by hierarchy,
-                e.g. rye for bourbon).
+                <strong>Coverage</strong> — share of required ingredients on hand (exact or hierarchy).
               </li>
               <li>
-                <strong>Almost</strong> — one or two ingredients short. Missing items are listed on
-                each card.
+                <strong>Expiry</strong> — boost when the recipe uses something due within ~2 weeks.
               </li>
               <li>
-                <strong>Smart Buy</strong> — a single addition that unlocks the most new recipes.
-                Prefer these over random shopping.
+                <strong>Flavor</strong> — 50/50 molecular overlap + recipe co-occurrence among on-hand
+                ingredients; strongest pair is named on the card.
               </li>
               <li>
-                Ranking boosts recipes that use food near expiry and that have stronger flavor
-                co-occurrence. Filter by time or skill when you want a shorter list.
+                <strong>Hierarchy</strong> — rye may cover bourbon, lemon may cover lime; each swap
+                applies a small penalty so exact matches still win ties.
+              </li>
+              <li>
+                <strong>Time</strong> — slight bonus under 15–25 minutes so weeknight options surface.
               </li>
             </ol>
             <p className="mt-3">
-              Inventory is local-first.{" "}
               <Link to="/inventory" className="underline underline-offset-2">
-                Edit what you have
+                Edit inventory
               </Link>{" "}
-              anytime — match updates immediately.
+              anytime — match and explanations update immediately.
             </p>
           </div>
         ) : null}
@@ -113,7 +111,6 @@ function MatchPage() {
         </section>
       ) : (
         <>
-          {/* Controls */}
           <div className="space-y-3">
             <div className="flex flex-wrap gap-2">
               {(["all", "food", "cocktail"] as const).map((k) => (
@@ -179,7 +176,6 @@ function MatchPage() {
             </div>
           </div>
 
-          {/* Metrics */}
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="metric">
               <span className="metric-value">{hydrated ? now.length : "—"}</span>
@@ -195,7 +191,6 @@ function MatchPage() {
             </div>
           </div>
 
-          {/* Use first — near-expiry drivers */}
           {useFirst.length > 0 ? (
             <section className="panel-surface border-l-4 border-l-burnished p-5">
               <p className="section-label">Use first</p>
@@ -232,7 +227,6 @@ function MatchPage() {
             </section>
           ) : null}
 
-          {/* Now */}
           <section>
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
@@ -242,11 +236,7 @@ function MatchPage() {
                 </h2>
               </div>
               {now.length > NOW_PREVIEW ? (
-                <button
-                  type="button"
-                  className="chip"
-                  onClick={() => setShowAllNow((v) => !v)}
-                >
+                <button type="button" className="chip" onClick={() => setShowAllNow((v) => !v)}>
                   {showAllNow ? "Show fewer" : `Show all ${now.length}`}
                 </button>
               ) : null}
@@ -268,7 +258,6 @@ function MatchPage() {
             )}
           </section>
 
-          {/* Almost */}
           <section>
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
@@ -280,11 +269,7 @@ function MatchPage() {
                 </h2>
               </div>
               {almost.length > ALMOST_PREVIEW ? (
-                <button
-                  type="button"
-                  className="chip"
-                  onClick={() => setShowAllAlmost((v) => !v)}
-                >
+                <button type="button" className="chip" onClick={() => setShowAllAlmost((v) => !v)}>
                   {showAllAlmost ? "Show fewer" : `Show all ${almost.length}`}
                 </button>
               ) : null}
@@ -298,7 +283,6 @@ function MatchPage() {
             ) : null}
           </section>
 
-          {/* Smart Buy */}
           <section className="panel-surface p-5 sm:p-6">
             <p className="section-label">Smart Buy</p>
             <h2 className="mt-1 font-display text-2xl">One addition, most new options</h2>
@@ -320,7 +304,6 @@ function MatchPage() {
             )}
           </section>
 
-          {/* Next step */}
           <section className="flex flex-wrap items-center gap-3">
             <Link to="/handoff" className="btn btn-primary">
               Send availability to Occasions
@@ -338,9 +321,9 @@ function MatchPage() {
   );
 }
 
-function HitCard({ hit, items }: { hit: MatchHit; items: ReturnType<typeof useInventory.getState>["items"] }) {
-  const why = explainRank(hit);
-  const urgent = urgentForHit(hit, items);
+function HitCard({ hit, items }: { hit: MatchHit; items: InventoryItem[] }) {
+  const [open, setOpen] = useState(false);
+  const breakdown = useMemo(() => buildBreakdown(hit, items), [hit, items]);
   const pct = Math.round(hit.matchPct * 100);
 
   return (
@@ -363,6 +346,7 @@ function HitCard({ hit, items }: { hit: MatchHit; items: ReturnType<typeof useIn
             "badge shrink-0 tabular",
             hit.tier === "now" ? "badge-comfortable" : "border border-line bg-transparent",
           )}
+          title={`Composite ${hit.composite}`}
         >
           {pct}%
         </span>
@@ -370,20 +354,7 @@ function HitCard({ hit, items }: { hit: MatchHit; items: ReturnType<typeof useIn
 
       <p className="mt-2 text-sm text-stone-deep">{hit.recipe.notes}</p>
 
-      <p className="mt-2 text-xs leading-relaxed text-muted">{why}</p>
-
-      {urgent.length > 0 ? (
-        <p className="mt-2 text-xs text-burnished">
-          Near expiry: {urgent.map((u) => u.displayName).join(", ")}
-        </p>
-      ) : null}
-
-      {hit.substituted.length > 0 ? (
-        <p className="mt-2 text-xs text-gold-700">
-          Hierarchy:{" "}
-          {hit.substituted.map((s) => `${s.used} for ${s.needed}`).join(", ")}
-        </p>
-      ) : null}
+      <p className="mt-2 text-xs leading-relaxed text-muted">{breakdown.summary}</p>
 
       <div className="mt-3 flex flex-wrap gap-1.5">
         {hit.have.map((name) => (
@@ -403,7 +374,91 @@ function HitCard({ hit, items }: { hit: MatchHit; items: ReturnType<typeof useIn
           </span>
         ))}
       </div>
+
+      <button
+        type="button"
+        className="mt-3 self-start text-xs font-medium text-heritage underline-offset-2 hover:underline"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        {open ? "Hide ranking factors" : "Why this rank"}
+      </button>
+
+      {open ? <RankPanel breakdown={breakdown} composite={hit.composite} /> : null}
     </article>
+  );
+}
+
+function RankPanel({ breakdown, composite }: { breakdown: RankBreakdown; composite: number }) {
+  return (
+    <div className="mt-3 space-y-3 rounded-lg border border-line bg-surface/60 p-3">
+      <p className="text-[0.7rem] font-medium uppercase tracking-wide text-muted">
+        Score {composite} · factor breakdown
+      </p>
+      <ul className="space-y-2.5">
+        {breakdown.factors.map((f) => (
+          <FactorRow key={f.key} factor={f} />
+        ))}
+      </ul>
+      {breakdown.flavor.topPair ? (
+        <p className="text-xs text-stone-deep">
+          Strongest on-hand pair:{" "}
+          <span className="font-medium">
+            {breakdown.flavor.topPair.a} + {breakdown.flavor.topPair.b}
+          </span>{" "}
+          ({breakdown.flavor.topPair.score.toFixed(2)} hybrid score)
+        </p>
+      ) : null}
+      {breakdown.expiry.items.length > 0 ? (
+        <p className="text-xs text-burnished">
+          Expiry drivers:{" "}
+          {breakdown.expiry.items
+            .map((u) =>
+              u.days !== null && u.days < 0
+                ? `${u.displayName} (past)`
+                : u.days !== null
+                  ? `${u.displayName} (${u.days}d)`
+                  : u.displayName,
+            )
+            .join(", ")}
+        </p>
+      ) : null}
+      <p className="font-mono text-[0.65rem] leading-relaxed text-muted">{breakdown.formula}</p>
+    </div>
+  );
+}
+
+function FactorRow({ factor }: { factor: RankFactor }) {
+  const barColor =
+    factor.impact === "up"
+      ? "bg-heritage"
+      : factor.impact === "down"
+        ? "bg-burnished"
+        : "bg-stone";
+
+  return (
+    <li>
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-xs font-medium text-ink">{factor.label}</span>
+        <span
+          className={cn(
+            "text-[0.65rem]",
+            factor.impact === "up" && "text-heritage",
+            factor.impact === "down" && "text-burnished",
+            factor.impact === "neutral" && "text-muted",
+          )}
+        >
+          {factor.impact === "up" ? "boost" : factor.impact === "down" ? "penalty" : "neutral"}
+        </span>
+      </div>
+      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-line">
+        <div
+          className={cn("h-full rounded-full transition-[width]", barColor)}
+          style={{ width: `${Math.round(Math.min(1, Math.max(0, factor.strength)) * 100)}%` }}
+        />
+      </div>
+      <p className="mt-1 text-[0.7rem] leading-snug text-stone-deep">{factor.detail}</p>
+    </li>
   );
 }
 
