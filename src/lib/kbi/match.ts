@@ -3,6 +3,9 @@ import { RECIPES } from "./catalog";
 import { MATCH_FLAVOR, recipeHarmony } from "./flavors";
 import { covers } from "./hierarchy";
 import type {
+  ContrastDelta,
+  ContrastExplanation,
+  CounterfactualPreview,
   InventoryItem,
   MatchHit,
   RankBreakdown,
@@ -324,4 +327,317 @@ export function useFirstItems(items: InventoryItem[], hits: MatchHit[], limit = 
     .filter((i) => used.has(i.normalizedName) && expiryUrgency(i.expiry) >= 0.4)
     .sort((a, b) => expiryUrgency(b.expiry) - expiryUrgency(a.expiry))
     .slice(0, limit);
+}
+
+/** Synthetic inventory row used only for counterfactual previews. */
+function virtualItem(normalizedName: string): InventoryItem {
+  return {
+    id: `cf-${normalizedName}`,
+    normalizedName,
+    displayName: normalizedName.replace(/-/g, " "),
+    category: "pantry",
+    quantity: { value: 1, unit: "count" },
+    expiry: null,
+    location: "pantry",
+    source: "manual",
+    confidence: 1,
+    lastUpdated: new Date().toISOString(),
+    tags: ["counterfactual"],
+    userNotes: "",
+  };
+}
+
+function timeBiasOf(hit: MatchHit): number {
+  return hit.recipe.minutes <= 15 ? 0.04 : hit.recipe.minutes <= 25 ? 0.02 : 0;
+}
+
+function hierarchyPenaltyOf(hit: MatchHit): number {
+  return hit.substituted.length * 0.04;
+}
+
+/**
+ * Contrastive explanation: why `preferred` ranks above `other`.
+ * Caller should pass the higher-ranked hit first when order is known;
+ * if composites disagree, the function re-labels winner/loser from scores.
+ */
+export function contrastHits(
+  preferred: MatchHit,
+  other: MatchHit,
+  items: InventoryItem[] = [],
+): ContrastExplanation {
+  const aWins =
+    preferred.tier !== other.tier
+      ? preferred.tier === "now"
+      : preferred.composite >= other.composite;
+  const winner = aWins ? preferred : other;
+  const loser = aWins ? other : preferred;
+
+  const deltas: ContrastDelta[] = [];
+
+  // Tier
+  if (winner.tier !== loser.tier) {
+    deltas.push({
+      key: "tier",
+      label: "Tier",
+      winnerValue: winner.tier === "now" ? "Can make now" : "Almost",
+      loserValue: loser.tier === "now" ? "Can make now" : "Almost",
+      advantage: "winner",
+      detail:
+        winner.tier === "now"
+          ? "Full coverage beats any Almost gap"
+          : "Both are Almost — score decides",
+    });
+  }
+
+  // Coverage
+  const covAdv =
+    winner.matchPct === loser.matchPct
+      ? "tie"
+      : winner.matchPct > loser.matchPct
+        ? "winner"
+        : "loser";
+  deltas.push({
+    key: "coverage",
+    label: "Coverage",
+    winnerValue: `${Math.round(winner.matchPct * 100)}% (${winner.have.length}/${winner.recipe.required.length})`,
+    loserValue: `${Math.round(loser.matchPct * 100)}% (${loser.have.length}/${loser.recipe.required.length})`,
+    advantage: covAdv,
+    detail:
+      covAdv === "tie"
+        ? "Same required coverage"
+        : covAdv === "winner"
+          ? "More of the required list is on hand"
+          : "The lower card actually has stronger coverage — other factors overrode it",
+  });
+
+  // Expiry
+  const expAdv =
+    Math.abs(winner.expiryBoost - loser.expiryBoost) < 0.05
+      ? "tie"
+      : winner.expiryBoost > loser.expiryBoost
+        ? "winner"
+        : "loser";
+  const winUrgent = urgentForHit(winner, items)
+    .map((i) => i.displayName)
+    .slice(0, 2);
+  const loseUrgent = urgentForHit(loser, items)
+    .map((i) => i.displayName)
+    .slice(0, 2);
+  deltas.push({
+    key: "expiry",
+    label: "Expiry",
+    winnerValue: winner.expiryBoost.toFixed(2) + (winUrgent.length ? ` · ${winUrgent.join(", ")}` : ""),
+    loserValue: loser.expiryBoost.toFixed(2) + (loseUrgent.length ? ` · ${loseUrgent.join(", ")}` : ""),
+    advantage: expAdv,
+    detail:
+      expAdv === "winner"
+        ? "Uses more near-expiry inventory"
+        : expAdv === "loser"
+          ? "The lower card uses ingredients that are more urgent"
+          : "Similar expiry signal",
+  });
+
+  // Flavor
+  const flAdv =
+    Math.abs(winner.flavorScore - loser.flavorScore) < 0.04
+      ? "tie"
+      : winner.flavorScore > loser.flavorScore
+        ? "winner"
+        : "loser";
+  const winPair = topFlavorPair(winner.recipe, [
+    ...winner.have,
+    ...winner.substituted.map((s) => s.used),
+  ]);
+  const losePair = topFlavorPair(loser.recipe, [
+    ...loser.have,
+    ...loser.substituted.map((s) => s.used),
+  ]);
+  deltas.push({
+    key: "flavor",
+    label: "Flavor",
+    winnerValue:
+      winner.flavorScore.toFixed(2) +
+      (winPair ? ` · ${winPair.a}+${winPair.b}` : ""),
+    loserValue:
+      loser.flavorScore.toFixed(2) +
+      (losePair ? ` · ${losePair.a}+${losePair.b}` : ""),
+    advantage: flAdv,
+    detail:
+      flAdv === "winner"
+        ? "Stronger on-hand co-occurrence / molecular fit"
+        : flAdv === "loser"
+          ? "The lower card has a stronger flavor pair"
+          : "Comparable flavor harmony",
+  });
+
+  // Hierarchy
+  const wPen = hierarchyPenaltyOf(winner);
+  const lPen = hierarchyPenaltyOf(loser);
+  const hAdv =
+    Math.abs(wPen - lPen) < 0.01 ? "tie" : wPen < lPen ? "winner" : "loser";
+  deltas.push({
+    key: "hierarchy",
+    label: "Hierarchy",
+    winnerValue:
+      winner.substituted.length === 0
+        ? "exact only"
+        : `${winner.substituted.length} swap (−${(wPen * 100).toFixed(0)}%)`,
+    loserValue:
+      loser.substituted.length === 0
+        ? "exact only"
+        : `${loser.substituted.length} swap (−${(lPen * 100).toFixed(0)}%)`,
+    advantage: hAdv,
+    detail:
+      hAdv === "winner"
+        ? "Fewer hierarchy swaps — exact matches preferred"
+        : hAdv === "loser"
+          ? "The lower card needed fewer substitutions"
+          : "Same hierarchy cost",
+  });
+
+  // Time
+  const wTime = timeBiasOf(winner);
+  const lTime = timeBiasOf(loser);
+  const tAdv =
+    Math.abs(wTime - lTime) < 0.005 ? "tie" : wTime > lTime ? "winner" : "loser";
+  deltas.push({
+    key: "time",
+    label: "Time",
+    winnerValue: `${winner.recipe.minutes} min`,
+    loserValue: `${loser.recipe.minutes} min`,
+    advantage: tAdv,
+    detail:
+      tAdv === "winner"
+        ? "Faster option gets a small speed bias"
+        : tAdv === "loser"
+          ? "The lower card is quicker"
+          : "Similar cook/pour time",
+  });
+
+  // Gap (almost only)
+  if (winner.missing.length > 0 || loser.missing.length > 0) {
+    const gAdv =
+      winner.missing.length === loser.missing.length
+        ? "tie"
+        : winner.missing.length < loser.missing.length
+          ? "winner"
+          : "loser";
+    deltas.push({
+      key: "gap",
+      label: "Gap",
+      winnerValue: winner.missing.length ? winner.missing.join(" + ") : "none",
+      loserValue: loser.missing.length ? loser.missing.join(" + ") : "none",
+      advantage: gAdv,
+      detail:
+        gAdv === "winner"
+          ? "Fewer missing ingredients"
+          : gAdv === "loser"
+            ? "The lower card is closer on missing count"
+            : "Same gap size",
+    });
+  }
+
+  const decisive = deltas.filter((d) => d.advantage === "winner");
+  const summaryParts: string[] = [];
+  if (winner.tier === "now" && loser.tier === "almost") {
+    summaryParts.push("full coverage vs a gap");
+  }
+  for (const d of decisive.slice(0, 3)) {
+    if (d.key === "tier") continue;
+    if (d.key === "expiry") summaryParts.push("stronger expiry boost");
+    else if (d.key === "flavor") summaryParts.push("better flavor fit");
+    else if (d.key === "coverage") summaryParts.push("higher coverage");
+    else if (d.key === "hierarchy") summaryParts.push("fewer hierarchy swaps");
+    else if (d.key === "time") summaryParts.push("quicker");
+    else if (d.key === "gap") summaryParts.push("smaller gap");
+  }
+  const summary =
+    summaryParts.length > 0
+      ? `${winner.recipe.name} ranks above ${loser.recipe.name} because of ${summaryParts.join(", ")}.`
+      : `${winner.recipe.name} edges ${loser.recipe.name} on composite (${winner.composite} vs ${loser.composite}).`;
+
+  return {
+    winnerId: winner.recipe.id,
+    loserId: loser.recipe.id,
+    winnerName: winner.recipe.name,
+    loserName: loser.recipe.name,
+    compositeDelta: Number((winner.composite - loser.composite).toFixed(3)),
+    summary,
+    deltas,
+  };
+}
+
+/**
+ * Counterfactual preview: re-rank as if `ingredient` were already in inventory.
+ * Shows how many recipes would move into Now and which names flip.
+ */
+export function previewAddIngredient(
+  items: InventoryItem[],
+  ingredient: string,
+  opts?: {
+    kind?: "food" | "cocktail" | "all";
+    maxMissing?: number;
+  },
+): CounterfactualPreview {
+  const kind = opts?.kind ?? "all";
+  const maxMissing = opts?.maxMissing ?? 2;
+  const normalized = ingredient.trim().toLowerCase();
+
+  const currentHits = rankRecipes(items, { kind, maxMissing });
+  const currentNowIds = new Set(
+    currentHits.filter((h) => h.tier === "now").map((h) => h.recipe.id),
+  );
+  const currentAlmost = currentHits.filter((h) => h.tier === "almost").length;
+  const currentNow = currentNowIds.size;
+
+  // Skip if already on hand
+  if (haveSet(items).has(normalized)) {
+    return {
+      ingredient: normalized,
+      currentNow,
+      projectedNow: currentNow,
+      deltaNow: 0,
+      currentAlmost,
+      projectedAlmost: currentAlmost,
+      newlyNow: [],
+      stillAlmost: [],
+      summary: `${normalized} is already in inventory — no ranking change.`,
+    };
+  }
+
+  const projectedItems = [...items, virtualItem(normalized)];
+  const projectedHits = rankRecipes(projectedItems, { kind, maxMissing });
+  const projectedNowHits = projectedHits.filter((h) => h.tier === "now");
+  const projectedAlmostHits = projectedHits.filter((h) => h.tier === "almost");
+  const projectedNow = projectedNowHits.length;
+
+  const newlyNow = projectedNowHits
+    .filter((h) => !currentNowIds.has(h.recipe.id))
+    .map((h) => h.recipe.name)
+    .sort((a, b) => a.localeCompare(b));
+
+  const stillAlmost = projectedAlmostHits
+    .filter((h) => h.missing.includes(normalized) === false)
+    .map((h) => h.recipe.name)
+    .slice(0, 8);
+
+  const deltaNow = projectedNow - currentNow;
+  const summary =
+    deltaNow > 0
+      ? `Add ${normalized} → +${deltaNow} Now (${newlyNow.slice(0, 3).join(", ")}${newlyNow.length > 3 ? ` +${newlyNow.length - 3} more` : ""}).`
+      : deltaNow === 0
+        ? `Add ${normalized} → no new Now recipes under current filters (may still shrink Almost gaps).`
+        : `Add ${normalized} → ranking shifts, but Now count does not rise under current filters.`;
+
+  return {
+    ingredient: normalized,
+    currentNow,
+    projectedNow,
+    deltaNow,
+    currentAlmost,
+    projectedAlmost: projectedAlmostHits.length,
+    newlyNow,
+    stillAlmost,
+    summary,
+  };
 }
