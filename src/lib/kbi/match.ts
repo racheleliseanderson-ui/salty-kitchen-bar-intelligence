@@ -2,7 +2,14 @@ import { daysUntil } from "@/lib/utils";
 import { RECIPES } from "./catalog";
 import { inventoryHarmony, pairScore } from "./flavors";
 import { covers } from "./hierarchy";
-import type { InventoryItem, MatchHit, Recipe, SmartBuy } from "./types";
+import type {
+  InventoryItem,
+  MatchHit,
+  RankBreakdown,
+  RankFactor,
+  Recipe,
+  SmartBuy,
+} from "./types";
 
 export function expiryUrgency(iso: string | null): number {
   const days = daysUntil(iso);
@@ -34,6 +41,23 @@ function recipeFlavor(recipe: Recipe, have: string[]): number {
     return other ? pairScore(names[0]!, other).composite : 0.5;
   }
   return 0.45;
+}
+
+/** Strongest on-hand pair for this recipe (for explainability). */
+function topFlavorPair(
+  recipe: Recipe,
+  have: string[],
+): { a: string; b: string; score: number } | null {
+  const names = [...new Set([...recipe.required, ...recipe.optional].filter((n) => have.includes(n)))];
+  if (names.length < 2) return null;
+  let best: { a: string; b: string; score: number } | null = null;
+  for (let i = 0; i < names.length; i++) {
+    for (let j = i + 1; j < names.length; j++) {
+      const score = pairScore(names[i]!, names[j]!).composite;
+      if (!best || score > best.score) best = { a: names[i]!, b: names[j]!, score };
+    }
+  }
+  return best;
 }
 
 export function scoreRecipe(recipe: Recipe, items: InventoryItem[]): MatchHit {
@@ -77,33 +101,170 @@ export function scoreRecipe(recipe: Recipe, items: InventoryItem[]): MatchHit {
   };
 }
 
-/** Human-readable reason this hit ranked where it did. */
+/** Human-readable one-liner (kept for compact surfaces). */
 export function explainRank(hit: MatchHit): string {
-  const parts: string[] = [];
-  if (hit.expiryBoost >= 0.8) parts.push("Uses something near expiry");
-  else if (hit.expiryBoost >= 0.4) parts.push("Uses something due this week");
-  if (hit.substituted.length) {
-    parts.push(
-      `Hierarchy: ${hit.substituted.map((s) => `${s.used} covers ${s.needed}`).join(", ")}`,
-    );
+  return buildBreakdown(hit, []).summary;
+}
+
+/** Full structured explanation for the match card "Why this rank" panel. */
+export function buildBreakdown(hit: MatchHit, items: InventoryItem[]): RankBreakdown {
+  const required = hit.recipe.required.length;
+  const haveCount = hit.have.length;
+  const coverageLabel =
+    required === 0
+      ? "No required ingredients"
+      : `${haveCount} of ${required} required on hand${hit.substituted.length ? ` (${hit.substituted.length} via hierarchy)` : ""}`;
+
+  const urgentItems = urgentForHit(hit, items).map((i) => ({
+    displayName: i.displayName,
+    normalizedName: i.normalizedName,
+    days: daysUntil(i.expiry),
+  }));
+
+  let expiryLabel = "No near-expiry boost";
+  if (hit.expiryBoost >= 0.8) {
+    expiryLabel =
+      urgentItems.length > 0
+        ? `Strong boost — ${urgentItems.map((u) => u.displayName).join(", ")} due soon or past`
+        : "Strong near-expiry boost";
+  } else if (hit.expiryBoost >= 0.4) {
+    expiryLabel =
+      urgentItems.length > 0
+        ? `Moderate boost — ${urgentItems.map((u) => u.displayName).join(", ")} due this week`
+        : "Moderate near-expiry boost";
+  } else if (hit.expiryBoost > 0) {
+    expiryLabel = "Light expiry signal";
   }
-  if (hit.flavorScore >= 0.7) parts.push("Strong flavor harmony");
-  else if (hit.flavorScore >= 0.55) parts.push("Solid flavor fit");
-  if (hit.recipe.minutes <= 15) parts.push("Quick");
-  if (hit.missing.length === 1) parts.push(`Only needs ${hit.missing[0]}`);
-  else if (hit.missing.length === 2) parts.push(`Needs ${hit.missing.join(" + ")}`);
-  if (!parts.length) {
-    return hit.tier === "now" ? "Everything required is on hand" : "Close — one or two ingredients away";
+
+  const topPair = topFlavorPair(hit.recipe, [
+    ...hit.have,
+    ...hit.substituted.map((s) => s.used),
+  ]);
+  let flavorLabel = "Baseline flavor fit";
+  if (hit.flavorScore >= 0.7) flavorLabel = "Strong flavor harmony among on-hand ingredients";
+  else if (hit.flavorScore >= 0.55) flavorLabel = "Solid flavor co-occurrence";
+  else if (hit.flavorScore < 0.45) flavorLabel = "Sparse flavor signal — ranking leans on coverage";
+  if (topPair) {
+    flavorLabel += ` · best pair ${topPair.a} + ${topPair.b} (${topPair.score.toFixed(2)})`;
   }
-  return parts.join(" · ");
+
+  const hierarchyPenalty = hit.substituted.length * 0.04;
+  const hierarchyLabel =
+    hit.substituted.length === 0
+      ? "Exact matches only — no hierarchy swaps"
+      : hit.substituted.map((s) => `${s.used} covers ${s.needed}`).join("; ") +
+        ` (−${(hierarchyPenalty * 100).toFixed(0)}% hierarchy penalty)`;
+
+  const timeBias = hit.recipe.minutes <= 15 ? 0.04 : hit.recipe.minutes <= 25 ? 0.02 : 0;
+  const timeLabel =
+    timeBias > 0
+      ? `${hit.recipe.minutes} min — small speed bonus`
+      : `${hit.recipe.minutes} min — no speed bonus`;
+
+  const factors: RankFactor[] = [
+    {
+      key: "coverage",
+      label: "Coverage",
+      detail: coverageLabel,
+      strength: hit.matchPct,
+      impact: hit.matchPct >= 1 ? "up" : hit.matchPct >= 0.66 ? "neutral" : "down",
+    },
+    {
+      key: "expiry",
+      label: "Expiry",
+      detail: expiryLabel,
+      strength: Math.min(1, hit.expiryBoost),
+      impact: hit.expiryBoost >= 0.4 ? "up" : "neutral",
+    },
+    {
+      key: "flavor",
+      label: "Flavor",
+      detail: flavorLabel,
+      strength: Math.min(1, hit.flavorScore),
+      impact: hit.flavorScore >= 0.55 ? "up" : "neutral",
+    },
+    {
+      key: "hierarchy",
+      label: "Hierarchy",
+      detail: hierarchyLabel,
+      strength: hit.substituted.length === 0 ? 1 : Math.max(0.2, 1 - hierarchyPenalty * 4),
+      impact: hit.substituted.length === 0 ? "neutral" : "down",
+    },
+    {
+      key: "time",
+      label: "Time",
+      detail: timeLabel,
+      strength: timeBias > 0 ? 0.6 + timeBias * 5 : 0.25,
+      impact: timeBias > 0 ? "up" : "neutral",
+    },
+  ];
+
+  if (hit.missing.length > 0) {
+    factors.push({
+      key: "gap",
+      label: "Gap",
+      detail:
+        hit.missing.length === 1
+          ? `Only needs ${hit.missing[0]}`
+          : `Needs ${hit.missing.join(" + ")}`,
+      strength: 1 - hit.missing.length / Math.max(1, required),
+      impact: "down",
+    });
+  }
+
+  const summaryParts: string[] = [];
+  if (hit.tier === "now" && hit.substituted.length === 0) summaryParts.push("Full exact coverage");
+  else if (hit.tier === "now") summaryParts.push("Full coverage via hierarchy");
+  if (hit.expiryBoost >= 0.4) summaryParts.push("expiry boost");
+  if (hit.flavorScore >= 0.55) summaryParts.push("flavor fit");
+  if (hit.missing.length === 1) summaryParts.push(`needs ${hit.missing[0]}`);
+  else if (hit.missing.length === 2) summaryParts.push(`needs ${hit.missing.join(" + ")}`);
+  if (timeBias > 0) summaryParts.push("quick");
+  const summary =
+    summaryParts.length > 0
+      ? summaryParts.join(" · ")
+      : hit.tier === "now"
+        ? "Everything required is on hand"
+        : "Close — one or two ingredients away";
+
+  const formula = `match ${Math.round(hit.matchPct * 100)}% × (1 + 0.28·expiry ${hit.expiryBoost.toFixed(2)}) × (0.72 + 0.28·flavor ${hit.flavorScore.toFixed(2)}) × (1 − hierarchy ${hierarchyPenalty.toFixed(2)}) + time ${timeBias.toFixed(2)} → ${hit.composite}`;
+
+  return {
+    summary,
+    formula,
+    factors,
+    coverage: {
+      have: haveCount,
+      required,
+      pct: hit.matchPct,
+      label: coverageLabel,
+    },
+    expiry: {
+      boost: hit.expiryBoost,
+      items: urgentItems,
+      label: expiryLabel,
+    },
+    flavor: {
+      score: hit.flavorScore,
+      label: flavorLabel,
+      topPair,
+    },
+    hierarchy: {
+      swaps: hit.substituted,
+      penalty: hierarchyPenalty,
+      label: hierarchyLabel,
+    },
+    time: {
+      minutes: hit.recipe.minutes,
+      bias: timeBias,
+      label: timeLabel,
+    },
+  };
 }
 
 /** Inventory items that are powering the expiry boost on this hit. */
 export function urgentForHit(hit: MatchHit, items: InventoryItem[]): InventoryItem[] {
-  const names = new Set([
-    ...hit.have,
-    ...hit.substituted.map((s) => s.used),
-  ]);
+  const names = new Set([...hit.have, ...hit.substituted.map((s) => s.used)]);
   return items
     .filter((i) => names.has(i.normalizedName) && expiryUrgency(i.expiry) >= 0.4)
     .sort((a, b) => expiryUrgency(b.expiry) - expiryUrgency(a.expiry));
