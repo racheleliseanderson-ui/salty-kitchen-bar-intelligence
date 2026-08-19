@@ -94,6 +94,60 @@ export interface MatchHit {
   tier: "now" | "almost";
 }
 
+/** One scored factor in the ranking explanation. */
+export type RankFactorKey =
+  | "coverage"
+  | "expiry"
+  | "flavor"
+  | "hierarchy"
+  | "time"
+  | "gap";
+
+export interface RankFactor {
+  key: RankFactorKey;
+  label: string;
+  detail: string;
+  /** Visual strength 0–1 for bar width. */
+  strength: number;
+  /** Direction of influence on the composite. */
+  impact: "up" | "down" | "neutral";
+}
+
+/** Structured breakdown so the UI can show why a hit ranked where it did. */
+export interface RankBreakdown {
+  summary: string;
+  /** Short readable formula of the composite. */
+  formula: string;
+  factors: RankFactor[];
+  coverage: {
+    have: number;
+    required: number;
+    pct: number;
+    label: string;
+  };
+  expiry: {
+    boost: number;
+    items: { displayName: string; normalizedName: string; days: number | null }[];
+    label: string;
+  };
+  flavor: {
+    score: number;
+    label: string;
+    /** Strongest on-hand pair contributing to harmony, if any. */
+    topPair: { a: string; b: string; score: number } | null;
+  };
+  hierarchy: {
+    swaps: { needed: string; used: string }[];
+    penalty: number;
+    label: string;
+  };
+  time: {
+    minutes: number;
+    bias: number;
+    label: string;
+  };
+}
+
 export interface SmartBuy {
   ingredient: string;
   unlocks: string[];
