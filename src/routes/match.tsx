@@ -3,6 +3,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/kbi/PageHeader";
 import {
   buildBreakdown,
+  contrastHits,
+  previewAddIngredient,
   rankRecipes,
   smartBuys,
   useFirstItems,
@@ -10,7 +12,15 @@ import {
   type RankSort,
 } from "@/lib/kbi/match";
 import { useInventory } from "@/lib/kbi/store";
-import type { InventoryItem, MatchHit, RankBreakdown, RankFactor, SmartBuy } from "@/lib/kbi/types";
+import type {
+  ContrastExplanation,
+  CounterfactualPreview,
+  InventoryItem,
+  MatchHit,
+  RankBreakdown,
+  RankFactor,
+  SmartBuy,
+} from "@/lib/kbi/types";
 import { cn, daysUntil, formatDate } from "@/lib/utils";
 
 export const Route = createFileRoute("/match")({ component: MatchPage });
@@ -49,7 +59,7 @@ function MatchPage() {
       <PageHeader
         kicker="03 · Match"
         title="What you can make now, almost, and with one bottle."
-        lede="Ranked from your local inventory — match × expiry urgency × flavor harmony, with spirit and produce hierarchy. Open any card’s Why this rank for the full factor breakdown."
+        lede="Ranked from your local inventory — match × expiry urgency × flavor harmony, with spirit and produce hierarchy. Open Why this rank for factors, Why above next for a head-to-head, and If you add this on Smart Buy for a live counterfactual."
       />
 
       <section className="panel-surface overflow-hidden">
@@ -90,6 +100,11 @@ function MatchPage() {
               </li>
             </ol>
             <p className="mt-3">
+              Cards also support <strong>contrast</strong> (why this ranks above the next card) and
+              Smart Buy supports <strong>counterfactuals</strong> (if you add this bottle, how many
+              recipes move to Now). Both use the same scoring function — no separate model.
+            </p>
+            <p className="mt-2">
               <Link to="/inventory" className="underline underline-offset-2">
                 Edit inventory
               </Link>{" "}
@@ -251,8 +266,13 @@ function MatchPage() {
               </p>
             ) : (
               <div className="mt-4 grid gap-3 lg:grid-cols-2">
-                {visibleNow.map((hit) => (
-                  <HitCard key={hit.recipe.id} hit={hit} items={items} />
+                {visibleNow.map((hit, i) => (
+                  <HitCard
+                    key={hit.recipe.id}
+                    hit={hit}
+                    items={items}
+                    peer={visibleNow[i + 1]}
+                  />
                 ))}
               </div>
             )}
@@ -276,8 +296,13 @@ function MatchPage() {
             </div>
             {almost.length > 0 ? (
               <div className="mt-4 grid gap-3 lg:grid-cols-2">
-                {visibleAlmost.map((hit) => (
-                  <HitCard key={hit.recipe.id} hit={hit} items={items} />
+                {visibleAlmost.map((hit, i) => (
+                  <HitCard
+                    key={hit.recipe.id}
+                    hit={hit}
+                    items={items}
+                    peer={visibleAlmost[i + 1]}
+                  />
                 ))}
               </div>
             ) : null}
@@ -287,8 +312,9 @@ function MatchPage() {
             <p className="section-label">Smart Buy</p>
             <h2 className="mt-1 font-display text-2xl">One addition, most new options</h2>
             <p className="mt-2 max-w-2xl text-sm text-stone-deep">
-              Ranked by how many curated recipes a single missing ingredient would unlock. Prefer
-              these over buying at random — then re-check Now after you add them to inventory.
+              Ranked by how many curated recipes a single missing ingredient would unlock. Open{" "}
+              <strong>If you add this</strong> for a counterfactual: how many cards move to Now under
+              your current filters — same ranker, simulated inventory.
             </p>
             {buys.length === 0 ? (
               <p className="mt-4 text-sm text-stone-deep">
@@ -298,7 +324,13 @@ function MatchPage() {
             ) : (
               <ul className="mt-5 grid gap-3 sm:grid-cols-2">
                 {buys.map((buy, i) => (
-                  <SmartBuyCard key={buy.ingredient} buy={buy} rank={i + 1} />
+                  <SmartBuyCard
+                    key={buy.ingredient}
+                    buy={buy}
+                    rank={i + 1}
+                    items={items}
+                    kind={kind}
+                  />
                 ))}
               </ul>
             )}
@@ -321,9 +353,22 @@ function MatchPage() {
   );
 }
 
-function HitCard({ hit, items }: { hit: MatchHit; items: InventoryItem[] }) {
+function HitCard({
+  hit,
+  items,
+  peer,
+}: {
+  hit: MatchHit;
+  items: InventoryItem[];
+  peer?: MatchHit;
+}) {
   const [open, setOpen] = useState(false);
+  const [openContrast, setOpenContrast] = useState(false);
   const breakdown = useMemo(() => buildBreakdown(hit, items), [hit, items]);
+  const contrast = useMemo(
+    () => (peer ? contrastHits(hit, peer, items) : null),
+    [hit, peer, items],
+  );
   const pct = Math.round(hit.matchPct * 100);
 
   return (
@@ -375,16 +420,29 @@ function HitCard({ hit, items }: { hit: MatchHit; items: InventoryItem[] }) {
         ))}
       </div>
 
-      <button
-        type="button"
-        className="mt-3 self-start text-xs font-medium text-heritage underline-offset-2 hover:underline"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-      >
-        {open ? "Hide ranking factors" : "Why this rank"}
-      </button>
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+        <button
+          type="button"
+          className="text-xs font-medium text-heritage underline-offset-2 hover:underline"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+        >
+          {open ? "Hide ranking factors" : "Why this rank"}
+        </button>
+        {peer && contrast ? (
+          <button
+            type="button"
+            className="text-xs font-medium text-heritage underline-offset-2 hover:underline"
+            onClick={() => setOpenContrast((v) => !v)}
+            aria-expanded={openContrast}
+          >
+            {openContrast ? "Hide comparison" : `Why above ${peer.recipe.name}`}
+          </button>
+        ) : null}
+      </div>
 
       {open ? <RankPanel breakdown={breakdown} composite={hit.composite} /> : null}
+      {openContrast && contrast ? <ContrastPanel contrast={contrast} /> : null}
     </article>
   );
 }
@@ -463,9 +521,66 @@ function FactorRow({ factor }: { factor: RankFactor }) {
   );
 }
 
-function SmartBuyCard({ buy, rank }: { buy: SmartBuy; rank: number }) {
+function ContrastPanel({ contrast }: { contrast: ContrastExplanation }) {
+  return (
+    <div className="mt-3 space-y-3 rounded-lg border border-line bg-surface/60 p-3">
+      <p className="text-[0.7rem] font-medium uppercase tracking-wide text-muted">
+        Head-to-head · Δ composite {contrast.compositeDelta >= 0 ? "+" : ""}
+        {contrast.compositeDelta}
+      </p>
+      <p className="text-xs leading-relaxed text-stone-deep">{contrast.summary}</p>
+      <ul className="space-y-2">
+        {contrast.deltas.map((d) => (
+          <li key={d.key} className="text-[0.7rem] leading-snug">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <span className="font-medium text-ink">{d.label}</span>
+              <span
+                className={cn(
+                  "text-[0.65rem]",
+                  d.advantage === "winner" && "text-heritage",
+                  d.advantage === "loser" && "text-burnished",
+                  d.advantage === "tie" && "text-muted",
+                )}
+              >
+                {d.advantage === "winner"
+                  ? "favors this"
+                  : d.advantage === "loser"
+                    ? "favors next"
+                    : "tie"}
+              </span>
+            </div>
+            <p className="mt-0.5 text-stone-deep">
+              <span className="text-ink">{d.winnerValue}</span>
+              <span className="text-muted"> vs </span>
+              <span>{d.loserValue}</span>
+            </p>
+            <p className="mt-0.5 text-muted">{d.detail}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function SmartBuyCard({
+  buy,
+  rank,
+  items,
+  kind,
+}: {
+  buy: SmartBuy;
+  rank: number;
+  items: InventoryItem[];
+  kind: "all" | "food" | "cocktail";
+}) {
+  const [open, setOpen] = useState(false);
   const preview = buy.unlocks.slice(0, 4);
   const more = buy.unlocks.length - preview.length;
+
+  const cf = useMemo((): CounterfactualPreview | null => {
+    if (!open) return null;
+    return previewAddIngredient(items, buy.ingredient, { kind });
+  }, [open, items, buy.ingredient, kind]);
 
   return (
     <li className="panel-inset flex flex-col p-4">
@@ -491,6 +606,61 @@ function SmartBuyCard({ buy, rank }: { buy: SmartBuy; rank: number }) {
           <span className="rounded-full px-2 py-0.5 text-[0.7rem] text-muted">+{more} more</span>
         ) : null}
       </div>
+
+      <button
+        type="button"
+        className="mt-3 self-start text-xs font-medium text-heritage underline-offset-2 hover:underline"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        {open ? "Hide counterfactual" : "If you add this"}
+      </button>
+
+      {open && cf ? (
+        <div className="mt-3 space-y-2 rounded-lg border border-line bg-surface/60 p-3">
+          <p className="text-[0.7rem] font-medium uppercase tracking-wide text-muted">
+            Counterfactual · same ranker, simulated inventory
+          </p>
+          <p className="text-xs leading-relaxed text-stone-deep">{cf.summary}</p>
+          <div className="flex flex-wrap gap-3 text-xs">
+            <span>
+              Now <span className="font-semibold tabular">{cf.currentNow}</span>
+              <span className="text-muted"> → </span>
+              <span className="font-semibold tabular text-heritage">{cf.projectedNow}</span>
+              {cf.deltaNow > 0 ? (
+                <span className="ml-1 text-heritage">(+{cf.deltaNow})</span>
+              ) : null}
+            </span>
+            <span className="text-muted">
+              Almost {cf.currentAlmost} → {cf.projectedAlmost}
+            </span>
+          </div>
+          {cf.newlyNow.length > 0 ? (
+            <div>
+              <p className="text-[0.65rem] uppercase tracking-wide text-muted">Moves to Now</p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {cf.newlyNow.slice(0, 8).map((name) => (
+                  <span
+                    key={name}
+                    className="rounded-full bg-navy-100 px-2 py-0.5 text-[0.7rem] text-heritage"
+                  >
+                    {name}
+                  </span>
+                ))}
+                {cf.newlyNow.length > 8 ? (
+                  <span className="rounded-full px-2 py-0.5 text-[0.7rem] text-muted">
+                    +{cf.newlyNow.length - 8} more
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+          <p className="text-[0.65rem] text-muted">
+            Unlock list above is one-miss recipes; the counterfactual re-runs full ranking after a
+            virtual add, so counts can differ slightly from the unlock tally.
+          </p>
+        </div>
+      ) : null}
     </li>
   );
 }
