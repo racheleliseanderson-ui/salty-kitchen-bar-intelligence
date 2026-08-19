@@ -126,4 +126,8 @@ export interface Competitor {
   bar: boolean;
   vision: boolean;
   chemistry: boolean;
+  /** Official product / methodology URL when available. */
+  url?: string;
+  /** Short provenance note for the primary link. */
+  sourceNote?: string;
 }
