@@ -3,13 +3,18 @@ export const FAMILIES: Record<string, string[]> = {
   whiskey: ["bourbon", "rye", "scotch", "irish whiskey", "whiskey"],
   citrus: ["lemon", "lime", "orange", "grapefruit", "citrus"],
   allium: ["onion", "garlic", "shallot", "allium"],
-  dairy: ["milk", "cream", "butter", "parmesan", "dairy"],
+  dairy: ["milk", "cream", "butter", "parmesan", "yogurt", "dairy"],
   tequila: ["tequila", "blanco", "reposado"],
   rum: ["rum", "white rum", "dark rum"],
   sweetener: ["simple syrup", "sugar", "honey", "agave"],
   bitter: ["angostura", "campari", "bitters"],
   vermouth: ["sweet vermouth", "dry vermouth", "vermouth"],
   green: ["kale", "spinach", "lettuce", "herb"],
+  grain: ["pasta", "rice", "grain"],
+  bean: ["black beans", "chickpeas", "lentils", "beans"],
+  mustard: ["dijon", "mustard"],
+  oil: ["olive oil", "sesame oil", "oil"],
+  egg: ["eggs", "egg"],
 };
 
 export function familyOf(name: string): string | null {
