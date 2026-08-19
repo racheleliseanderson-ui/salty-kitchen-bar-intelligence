@@ -2,7 +2,14 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/kbi/PageHeader";
 import { METHOD_NOTES, PAIRING_SOURCES } from "@/lib/kbi/report";
-import { PROFILES, bestPairsFor, pairScore } from "@/lib/kbi/flavors";
+import {
+  PROFILES,
+  DATA_VERSION,
+  LAST_REVIEWED,
+  SYNERGY,
+  bestPairsFor,
+  pairScore,
+} from "@/lib/kbi/flavors";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/pairing")({ component: PairingPage });
@@ -20,8 +27,24 @@ function PairingPage() {
       <PageHeader
         kicker="02 · Pairing data"
         title="A hybrid molecular + co-occurrence engine can be bootstrapped now."
-        lede="Curated profiles here stand in for FlavorDB / FooDB vectors. The formula is the same: Jaccard on volatiles, blended 50/50 with recipe co-occurrence, plus a synergy bonus."
+        lede="Curated profiles stand in for FlavorDB / FooDB vectors. The formula is fixed: Jaccard on volatiles, blended 50/50 with recipe co-occurrence, plus a synergy bonus only when both sides are already elevated."
       />
+
+      <div className="panel-inset flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-sm text-stone-deep">
+        <span>
+          <span className="font-semibold text-navy-700">Data version</span>{" "}
+          {DATA_VERSION}
+        </span>
+        <span className="text-muted">·</span>
+        <span>
+          <span className="font-semibold text-navy-700">Last reviewed</span>{" "}
+          {LAST_REVIEWED}
+        </span>
+        <span className="text-muted">·</span>
+        <span>
+          Educational curated subset — not a live or licensed FlavorDB / FooDB extract.
+        </span>
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {PAIRING_SOURCES.map((s) => (
@@ -42,6 +65,7 @@ function PairingPage() {
               {PROFILES.map((p) => (
                 <option key={p.name} value={p.name}>
                   {p.displayName}
+                  {p.coverage === "sparse" ? " (sparse)" : ""}
                 </option>
               ))}
             </select>
@@ -52,6 +76,7 @@ function PairingPage() {
               {PROFILES.map((p) => (
                 <option key={p.name} value={p.name}>
                   {p.displayName}
+                  {p.coverage === "sparse" ? " (sparse)" : ""}
                 </option>
               ))}
             </select>
@@ -62,6 +87,27 @@ function PairingPage() {
           <ScoreMeter label="Molecular Jaccard" value={score.molecular} />
           <ScoreMeter label="Recipe co-occurrence" value={score.cooccurrence} />
           <ScoreMeter label="Composite" value={score.composite} accent />
+        </div>
+
+        <div className="mt-4 panel-inset space-y-2 p-4 text-sm leading-relaxed text-stone-deep">
+          <p>
+            <span className="font-semibold text-navy-700">Synergy gate</span>{" "}
+            +{SYNERGY.bonus.toFixed(2)} only when Molecular Jaccard &gt;{" "}
+            {SYNERGY.molecularMin} <span className="text-muted">and</span> Recipe
+            co-occurrence &gt; {SYNERGY.coMin}. Never invents a pair from one signal alone.
+          </p>
+          <p>
+            Bonus on this pair:{" "}
+            <span className={cn("font-semibold", score.synergyApplied ? "text-heritage" : "text-muted")}>
+              {score.synergyApplied ? `applied (+${SYNERGY.bonus.toFixed(2)})` : "not applied"}
+            </span>
+          </p>
+          {(score.coverageA === "sparse" || score.coverageB === "sparse") && (
+            <p className="text-muted">
+              One or both profiles are marked <span className="font-semibold">sparse</span> —
+              composite leans more on co-occurrence until denser volatiles are curated.
+            </p>
+          )}
         </div>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-2">
@@ -78,9 +124,22 @@ function PairingPage() {
                 <p className="text-sm text-muted">No shared volatiles in this curated set.</p>
               )}
             </div>
+            <div className="mt-3 flex flex-wrap gap-2 text-xs">
+              {pa?.coverage && (
+                <span className="badge badge-comfortable">A: {pa.coverage}</span>
+              )}
+              {pb?.coverage && (
+                <span className="badge badge-comfortable">B: {pb.coverage}</span>
+              )}
+            </div>
             <p className="mt-3 text-sm leading-relaxed text-stone-deep">
               {pa?.notes} {pb?.notes}
             </p>
+            {(pa?.sourceNote || pb?.sourceNote) && (
+              <p className="mt-2 text-xs text-muted">
+                {[pa?.sourceNote, pb?.sourceNote].filter(Boolean).join(" · ")}
+              </p>
+            )}
           </div>
           <div className="panel-inset p-4">
             <p className="section-label">Best neighbors for {pa?.displayName}</p>

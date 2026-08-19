@@ -27,19 +27,36 @@ export const VISION = {
 };
 
 export const PAIRING_SOURCES = [
-  { name: "FlavorDB / FlavorDB2", detail: "~25,595 flavor molecules; 2,254 linked to ~936 ingredients across 34 categories. Pairing by shared compounds. Research / non-commercial baseline until licenses are cleared." },
-  { name: "FooDB", detail: "~70k+ food constituents, nutrients, PubChem links. CSV / JSON / MySQL dumps. Curated subset only — not a live pull." },
-  { name: "Supporting sets", detail: "Flavornet, BitterDB, SuperSweet, Fenaroli, ChemTastesDB, odor thresholds, CompKitchen-style GC-MS extraction." },
-  { name: "Recipe co-occurrence", detail: "OpenRecipes, public-domain cookbooks, and CC collections for NPMI-style statistics. Cultural and coverage bias remain." },
+  {
+    name: "FlavorDB / FlavorDB2",
+    detail:
+      "~25,595 flavor molecules; 2,254 linked to ~936 ingredients across 34 categories. Research / non-commercial baseline. Commercial use requires clearance. KBI uses a curated educational subset only — not a live or licensed extract.",
+  },
+  {
+    name: "FooDB",
+    detail:
+      "~70k+ food constituents, nutrients, PubChem links. CSV / JSON / MySQL dumps. Curated subset only — not a live pull. Same license boundary as FlavorDB for commercial density.",
+  },
+  {
+    name: "Supporting sets",
+    detail:
+      "Flavornet, BitterDB, SuperSweet, Fenaroli, ChemTastesDB, odor thresholds, CompKitchen-style GC-MS extraction. Used to ground key odorants in the curated profiles.",
+  },
+  {
+    name: "Recipe co-occurrence",
+    detail:
+      "OpenRecipes, public-domain cookbooks, and CC collections for NPMI-style statistics. Cultural and regional bias remain — Western and classic bar corpora are still over-represented relative to Levantine, Indian, West African, Mexican, and East Asian practice.",
+  },
 ];
 
 /** Exact hybrid used by the pairing explorer (curated stand-in, not a live database). */
 export const METHOD_NOTES = [
-  "Score = ~50/50 blend of (A) molecular overlap and (B) recipe co-occurrence, plus a synergy bonus when both are high.",
-  "(A) Molecular: Jaccard or IDF-weighted shared volatiles / compounds from the curated FlavorDB/FooDB-style subset.",
+  "Score = 50/50 blend of (A) molecular Jaccard and (B) recipe co-occurrence, plus a synergy bonus when both are high.",
+  "(A) Molecular: Jaccard on shared volatiles / compounds from the curated FlavorDB/FooDB-style subset.",
   "(B) Co-occurrence: NPMI-style statistics over open recipe collections (not proprietary menus).",
-  "Synergy bonus applies only when both A and B are already elevated — never invents chemistry from one side alone.",
-  "Always state sources, formula, and limits: matrix effects, cooking transformations, sparsity, cultural bias, license constraints.",
+  "Synergy bonus: +0.08 only when Molecular Jaccard > 0.25 AND Recipe co-occurrence > 0.5. Never invents chemistry from one side alone.",
+  "Coverage labels (rich / moderate / sparse) mark how dense each profile is. Sparse profiles lean harder on co-occurrence.",
+  "Always state sources, formula, data version, and limits: matrix effects, cooking transformations, sparsity, cultural bias, license constraints.",
   "Any generative layer must be constrained by these scores so the model cannot invent unsupported pairs.",
-  "This is a curated stand-in for product exploration. Production would require cleared licenses and an explicit subset version pin.",
+  "This is a curated, version-pinned stand-in for product exploration. Production density requires cleared licenses and an explicit subset version pin; the scoring formula stays the same.",
 ];

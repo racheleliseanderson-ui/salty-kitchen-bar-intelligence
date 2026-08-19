@@ -24,6 +24,9 @@ export type UserIntent = "daily_inventory" | "explore" | "candidate_for_occasion
 export type RecipeKind = "food" | "cocktail";
 export type Skill = "easy" | "medium" | "involved";
 
+/** How dense the curated volatile list is for this ingredient. */
+export type ProfileCoverage = "rich" | "moderate" | "sparse";
+
 export interface Quantity {
   value: number;
   unit: Unit;
@@ -61,6 +64,10 @@ export interface FlavorProfile {
   compounds: string[];
   category: string;
   notes: string;
+  /** Density of the curated volatile list. Sparse profiles lean harder on co-occurrence. */
+  coverage?: ProfileCoverage;
+  /** Short provenance note for the profile vectors. */
+  sourceNote?: string;
 }
 
 export interface Recipe {
