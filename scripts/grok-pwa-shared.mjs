@@ -5,7 +5,7 @@
  * the Nitro bundler can both consume it.
  */
 
-export const DEFAULT_APP_NAME = "Grok App";
+export const DEFAULT_APP_NAME = "Kitchen & Bar";
 
 export function escapeHtml(value) {
   return String(value)
@@ -82,53 +82,28 @@ export function stripInstallParams(url) {
   return rest ? `${path}?${rest}` : path;
 }
 
-export function renderInstallPageHtml(template, { host, url } = {}) {
-  return String(template)
-    .replaceAll("{{APP_NAME}}", escapeHtml(appNameFromHost(host)))
-    .replaceAll("{{APP_URL}}", escapeHtml(stripInstallParams(url)));
-}
-
-export function renderWebManifest(hostHeader) {
-  const name = appNameFromHost(hostHeader);
-  return JSON.stringify(
-    {
-      name,
-      short_name: name,
-      id: "/",
-      start_url: "/",
-      scope: "/",
-      display: "standalone",
-      background_color: "#000000",
-      theme_color: "#000000",
-      icons: [
-        {
-          src: "/__grok/icon-180.png",
-          sizes: "180x180",
-          type: "image/png",
-        },
-      ],
-    },
-    null,
-    2,
-  );
+export function requestHost(event) {
+  const h = event?.req?.headers;
+  const raw =
+    (typeof h?.get === "function" ? h.get("x-forwarded-host") : null) ||
+    (typeof h?.get === "function" ? h.get("host") : null) ||
+    "";
+  return String(raw).split(",")[0].trim();
 }
 
 export function grokPwaHeadTags(appName = DEFAULT_APP_NAME) {
+  const name = escapeHtml(appName);
   return [
-    // Standalone display comes from the manifest ("display": "standalone");
-    // the legacy *-web-app-capable metas it replaces are deliberately absent.
-    ["manifest", '<link rel="manifest" href="/__grok/manifest.webmanifest">'],
-    ["apple-touch-icon", '<link rel="apple-touch-icon" href="/__grok/icon-180.png">'],
-    [
-      "apple-mobile-web-app-title",
-      `<meta name="apple-mobile-web-app-title" content="${escapeHtml(appName)}">`,
-    ],
+    ["application-name", `<meta name="application-name" content="${name}">`],
+    ["apple-mobile-web-app-title", `<meta name="apple-mobile-web-app-title" content="${name}">`],
+    ["apple-mobile-web-app-capable", `<meta name="apple-mobile-web-app-capable" content="yes">`],
     [
       "apple-mobile-web-app-status-bar-style",
-      '<meta name="apple-mobile-web-app-status-bar-style" content="black">',
+      `<meta name="apple-mobile-web-app-status-bar-style" content="black">`,
     ],
-    ["theme-color", '<meta name="theme-color" content="#000000">'],
-    ["twitter:card", '<meta name="twitter:card" content="summary_large_image">'],
+    ["mobile-web-app-capable", `<meta name="mobile-web-app-capable" content="yes">`],
+    ["theme-color", `<meta name="theme-color" content="#000000">`],
+    ["twitter:card", `<meta name="twitter:card" content="summary_large_image">`],
   ];
 }
 
@@ -159,19 +134,9 @@ export function grokXCreatorHeadTags(creator = readXCreator(), creatorId = readX
   ];
 }
 
-/** Platform "Created with Grok" banner — injected into every HTML document. */
-export function grokExtensionsHeadTags(projectId = readGrokProjectId()) {
-  const id = escapeHtml(projectId);
-  const tags = [];
-  if (projectId) {
-    tags.push(`<meta name="grok-project-id" content="${id}">`);
-  }
-  tags.push(
-    `<script src="${GROK_EXTENSIONS_SCRIPT_SRC}"${
-      projectId ? ` data-project-id="${id}"` : ""
-    } defer></script>`,
-  );
-  return tags;
+/** Intentionally empty — no Grok watermark / extensions script in production. */
+export function grokExtensionsHeadTags(_projectId = readGrokProjectId()) {
+  return [];
 }
 
 export function injectGrokPwaHead(
@@ -196,30 +161,7 @@ export function injectGrokPwaHead(
       return !html.includes(`name="${key}"`);
     })
     .map(([, tag]) => tag);
-  if (!html.includes("/grok-app-builder/extensions.js")) {
-    missing.push(...grokExtensionsHeadTags(projectId));
-  } else if (projectId && !html.includes('name="grok-project-id"')) {
-    missing.push(`<meta name="grok-project-id" content="${escapeHtml(projectId)}">`);
-  }
-  if (
-    projectId &&
-    !html.includes('property="grok:app_id"') &&
-    !html.includes("property='grok:app_id'")
-  ) {
-    missing.push(`<meta property="grok:app_id" content="${escapeHtml(projectId)}">`);
-  }
-  const creatorTags = grokXCreatorHeadTags(creator, creatorId);
-  if (creatorTags.length > 0) {
-    const hasCreator =
-      html.includes('property="x:creator" content=') ||
-      html.includes("property='x:creator' content=");
-    if (!hasCreator) {
-      missing.push(creatorTags[0]);
-    }
-    if (!html.includes('property="x:creator:id"')) {
-      missing.push(creatorTags[1]);
-    }
-  }
+  // Grok project meta, extensions script, and x:creator tags intentionally omitted.
   if (missing.length === 0) return html;
   const snippet = missing.join("");
   if (html.includes("</head>")) return html.replace("</head>", `${snippet}</head>`);
