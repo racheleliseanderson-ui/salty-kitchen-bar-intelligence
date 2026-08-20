@@ -485,15 +485,15 @@ function VisionPage() {
 }
 
 const CAT_TONE: Record<Category, string> = {
-  spirit: "text-ivory",
+  spirit: "text-kitchen-ink",
   mixer: "text-brass",
   produce: "text-ok",
   dairy: "text-navy-200",
   pantry: "text-champagne",
-  protein: "text-linen",
+  protein: "text-stone-deep",
   herb: "text-ok",
   condiment: "text-champagne",
-  garnish: "text-linen",
+  garnish: "text-stone-deep",
 };
 
 function Silhouette({ category }: { category: Category }) {
@@ -588,7 +588,7 @@ function Shelf({
             title={`${det.label} · ${Math.round(det.confidence * 100)}%`}
           >
             <Silhouette category={det.category} />
-            <span className="mt-0.5 w-full truncate bg-ink-deep/70 px-0.5 text-center text-[9px] leading-tight text-ivory">
+            <span className="mt-0.5 w-full truncate bg-ink-deep/70 px-0.5 text-center text-[9px] leading-tight text-kitchen-ink">
               {det.label}
             </span>
           </button>

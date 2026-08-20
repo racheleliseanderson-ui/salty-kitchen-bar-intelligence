@@ -156,7 +156,7 @@ function HandoffPage() {
             ))}
           </ul>
         ) : null}
-        <pre className="mt-3 overflow-x-auto rounded-lg bg-ink-deep p-4 font-mono text-xs leading-relaxed text-ivory">
+        <pre className="mt-3 overflow-x-auto rounded-lg bg-ink-deep p-4 font-mono text-xs leading-relaxed text-kitchen-ink">
           {json}
         </pre>
       </section>

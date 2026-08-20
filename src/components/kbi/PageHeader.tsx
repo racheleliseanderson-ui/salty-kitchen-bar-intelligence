@@ -9,9 +9,9 @@ export function PageHeader({
 }) {
   return (
     <header className="max-w-3xl">
-      <p className="eyebrow">{kicker}</p>
+      <p className="label-mono text-brass">{kicker}</p>
       <h1 className="mt-2 font-display text-3xl sm:text-4xl">{title}</h1>
-      <p className="mt-3 text-base leading-relaxed text-stone-deep">{lede}</p>
+      <p className="mt-3 text-base leading-relaxed text-muted-foreground">{lede}</p>
     </header>
   );
 }

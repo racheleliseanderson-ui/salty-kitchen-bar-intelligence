@@ -9,6 +9,9 @@ const APP_DESCRIPTION =
   "Kitchen & Bar Intelligence from Salty & Clever — scan the shelf, confirm what you own, pair with chemistry and recipe practice, and hand off to Occasions.";
 const host = import.meta.env.VITE_PUBLIC_HOSTNAME;
 const ogImage = host ? `https://${host}/og.jpg` : undefined;
+const HOUSE_FONTS =
+  "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&family=Work+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap";
+const THEME_BOOTSTRAP = `(function(){try{var r=document.documentElement;var m=localStorage.getItem("sc-mode");if(m==="pearl"){r.classList.add("light");r.classList.remove("dark")}else{r.classList.add("dark");r.classList.remove("light")}if(localStorage.getItem("sc-cvd")==="on")r.classList.add("cvd")}catch(e){}})();`;
 
 export const Route = createRootRoute({
   head: () => ({
@@ -18,7 +21,7 @@ export const Route = createRootRoute({
       { title: APP_NAME },
       { name: "description", content: APP_DESCRIPTION },
       { name: "apple-mobile-web-app-title", content: APP_NAME },
-      { name: "theme-color", content: "#081A2C" },
+      { name: "theme-color", content: "#101828" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
       { property: "og:title", content: APP_NAME },
@@ -39,10 +42,7 @@ export const Route = createRootRoute({
       { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap",
-      },
+      { rel: "stylesheet", href: HOUSE_FONTS },
     ],
   }),
   component: RootComponent,
@@ -50,8 +50,9 @@ export const Route = createRootRoute({
 
 function RootComponent() {
   return (
-    <html lang="en" suppressHydrationWarning className="antialiased">
+    <html lang="en" className="dark antialiased" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
         <HeadContent />
       </head>
       <body>
