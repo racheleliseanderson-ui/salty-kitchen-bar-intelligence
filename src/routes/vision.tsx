@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/kbi/PageHeader";
+import figPantry from "@/assets/fig-pantry.jpg";
 import { SCENES, cloneScene, type DemoScene } from "@/lib/kbi/vision-demo";
 import { useInventory } from "@/lib/kbi/store";
 import type { Category, Detection, InventoryItem, Unit } from "@/lib/kbi/types";
@@ -161,6 +162,8 @@ function VisionPage() {
         kicker="01 · Vision"
         title="Review every scan before it becomes inventory."
         lede={VISION.verdict}
+        image={figPantry}
+        imageAlt="Jars of preserved fruit and vegetables lined on a rustic pantry shelf"
       />
 
       <div className="grid gap-4 sm:grid-cols-3">

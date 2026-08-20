@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast, Toaster } from "sonner";
 import { PageHeader } from "@/components/kbi/PageHeader";
+import figMise from "@/assets/fig-mise.jpg";
 import { CONTRACT_RULES, buildPacket, validatePacket } from "@/lib/kbi/handoff";
 import { useInventory } from "@/lib/kbi/store";
 import { OCCASIONS_ARCHITECTURE_URL, type AvailabilityPacket, type UserIntent } from "@/lib/kbi/types";
@@ -55,6 +56,8 @@ function HandoffPage() {
         kicker="04 · Handoff"
         title="Availability Packet 1.0 — user-initiated, nothing silent."
         lede="Occasions stays the occasion planner — Architecture is the five-role menu stress-test. This layer only forwards what is on the shelf and what the user has declared."
+        image={figMise}
+        imageAlt="Overhead mise en place — chopped vegetables arranged on a cutting board"
       />
 
       <ul className="grid gap-3 sm:grid-cols-2">

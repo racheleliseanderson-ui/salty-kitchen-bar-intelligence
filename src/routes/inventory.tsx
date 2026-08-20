@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast, Toaster } from "sonner";
 import { PageHeader } from "@/components/kbi/PageHeader";
+import figPrep from "@/assets/fig-prep.jpg";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { loadHousehold, saveHousehold } from "@/lib/kbi/server";
 import { useInventory } from "@/lib/kbi/store";
@@ -86,6 +87,8 @@ function InventoryPage() {
         kicker="03 · Inventory"
         title="Local-first pantry and bar. You confirm before anything is truth."
         lede="A starter pantry is loaded so Match has something real to rank. Edits stay in this browser. Sign in to save a household copy."
+        image={figPrep}
+        imageAlt="Organised meal-prep containers of vegetables, grains, and proteins"
       />
 
       <div className="flex flex-wrap items-center gap-2">

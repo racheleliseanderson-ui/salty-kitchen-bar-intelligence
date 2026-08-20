@@ -143,6 +143,9 @@
   --input: oklch(0.38 0.05 258);
   --ring: var(--brass-deep);
 
+  --media-opacity: 0.7;
+  --media-opacity-soft: 0.32;
+
   color-scheme: dark;
 }
 
@@ -184,6 +187,9 @@
   --border: oklch(0.855 0.014 265);
   --input: oklch(0.855 0.014 265);
   --ring: var(--brass-deep);
+
+  --media-opacity: 0.4;
+  --media-opacity-soft: 0.18;
 }
 
 .cvd {
@@ -589,6 +595,32 @@ html.mode-shift * {
   letter-spacing: -0.03em;
   font-size: clamp(2.5rem, 7vw, 5rem);
   text-wrap: balance;
+}
+
+@utility ink-veil {
+  background: linear-gradient(
+    to top,
+    var(--ink) 8%,
+    color-mix(in oklab, var(--ink) 74%, transparent) 48%,
+    color-mix(in oklab, var(--ink-deep) 40%, transparent) 100%
+  );
+}
+
+@utility media-tone {
+  opacity: var(--media-opacity);
+}
+
+@utility media-tone-soft {
+  opacity: var(--media-opacity-soft);
+}
+
+.light .ink-veil {
+  background: linear-gradient(
+    to top,
+    var(--ink) 4%,
+    color-mix(in oklab, var(--ink) 82%, transparent) 45%,
+    color-mix(in oklab, var(--ink) 62%, transparent) 100%
+  );
 }
 
 @utility gold-underline {

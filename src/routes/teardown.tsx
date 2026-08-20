@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/kbi/PageHeader";
+import figPlated from "@/assets/fig-plated.jpg";
 import { COMPETITORS, GAPS } from "@/lib/kbi/competitors";
 
 export const Route = createFileRoute("/teardown")({ component: TeardownPage });
@@ -11,6 +12,8 @@ function TeardownPage() {
         kicker="05 · Competitive field"
         title="The market proves the pieces. Nobody owns the union."
         lede="Home Bar Hero owns bottle vision. Chefs AI owns kitchen chemistry. Pantry apps own lists and then lose the truth. We ship unified inventory, persistent edit, and an explainable pairing graph."
+        image={figPlated}
+        imageAlt="Artistically plated roasted vegetables on a white plate"
       />
 
       <div className="overflow-x-auto panel-surface">

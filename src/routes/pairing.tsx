@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { IngredientPicker } from "@/components/kbi/IngredientPicker";
 import { PageHeader } from "@/components/kbi/PageHeader";
+import figBar from "@/assets/fig-bar.jpg";
 import { METHOD_NOTES, PAIRING_SOURCES } from "@/lib/kbi/report";
 import {
   PROFILES,
@@ -57,6 +58,8 @@ function PairingPage() {
         kicker="02 · Pairing"
         title="Molecular overlap plus what cooks actually pair."
         lede="Search an ingredient, inspect the chemistry, and rank it against what you already own. Classic bridges, unexpected chemistry, and the same scores Match uses."
+        image={figBar}
+        imageAlt="Iced citrus cocktail on a dark bar counter with bottles behind"
       />
 
       <div className="panel-inset flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-sm text-stone-deep">

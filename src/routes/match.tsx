@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/kbi/PageHeader";
+import figPlated from "@/assets/fig-plated.jpg";
 import {
   buildBreakdown,
   contrastHits,
@@ -60,6 +61,8 @@ function MatchPage() {
         kicker="03 · Match"
         title="What you can make now, almost, and with one bottle."
         lede="Ranked from your local inventory — match × expiry urgency × flavor harmony, with spirit and produce hierarchy. Open Why this rank for factors, Why above next for a head-to-head, and If you add this on Smart Buy for a live counterfactual."
+        image={figPlated}
+        imageAlt="Artistically plated roasted vegetables on a white plate"
       />
 
       <section className="panel-surface overflow-hidden">
