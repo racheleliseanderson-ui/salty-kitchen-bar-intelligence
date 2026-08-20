@@ -136,7 +136,7 @@ export const PROFILES: FlavorProfile[] = [
   p("smoked paprika", "Smoked paprika", "condiment", ["guaiacol", "pyrazines", "phenol"], "Sweet smoke chile.", "sparse"),
 ].sort((a, b) => a.displayName.localeCompare(b.displayName));
 
-function profileFor(name: string): FlavorProfile | undefined {
+export function profileFor(name: string): FlavorProfile | undefined {
   return PROFILES.find((p) => p.name === canon(name));
 }
 
@@ -318,6 +318,38 @@ export function pairScore(a: string, b: string) {
 export const MATCH_FLAVOR = { molecular: 0.35, cooccurrence: 0.65 } as const;
 export type PairScore = ReturnType<typeof pairScore>;
 export type ScoredNeighbor = PairScore & { displayName: string; category: string };
+
+/** Mean 35/65 molecular/co-occurrence across on-hand pairs, plus the strongest pair. */
+export function recipeHarmony(requiredHave: string[], optionalHave: string[]) {
+  const names = [...new Set([...requiredHave, ...optionalHave].map(canon))];
+  if (names.length < 2) {
+    return { score: names.length === 0 ? 0.5 : 0.55, topPair: null };
+  }
+  let best: PairScore | null = null;
+  let total = 0;
+  let n = 0;
+  for (let i = 0; i < names.length; i++) {
+    for (let j = i + 1; j < names.length; j++) {
+      const s = pairScore(names[i]!, names[j]!);
+      total += MATCH_FLAVOR.molecular * s.molecular + MATCH_FLAVOR.cooccurrence * s.cooccurrence;
+      n += 1;
+      if (!best || s.composite > best.composite) best = s;
+    }
+  }
+  const score = n === 0 ? 0.5 : total / n;
+  return {
+    score: Number(Math.min(1, score).toFixed(3)),
+    topPair: best
+      ? {
+          a: best.a,
+          b: best.b,
+          score: best.composite,
+          cooccurrence: best.cooccurrence,
+          molecular: best.molecular,
+        }
+      : null,
+  };
+}
 
 export function bestPairsFor(name: string, limit = 5, categoryFilter?: string): ScoredNeighbor[] {
   return PROFILES.filter((p) => {
