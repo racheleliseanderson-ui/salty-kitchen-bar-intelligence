@@ -17,7 +17,7 @@ function d(
 }
 
 /**
- * Review-first vision demos aligned to the denser SEED_VERSION 6 household.
+ * Review-first vision demos aligned to the denser SEED_VERSION 7 household.
  * Boxes only — no overlay labels in the product UI. Confidence drives the
  * accept/reject step; low-confidence items stay rejected by default.
  */
@@ -38,6 +38,8 @@ export const SCENES: DemoScene[] = [
       d("bar-cointreau", { label: "Cointreau", normalizedName: "cointreau", category: "spirit", location: "bar_shelf", confidence: 0.83, box: { x: 76, y: 18, w: 10, h: 60 } }),
       d("bar-angostura", { label: "Angostura?", normalizedName: "angostura", category: "mixer", location: "bar_shelf", confidence: 0.71, box: { x: 87, y: 28, w: 8, h: 44 } }),
       d("bar-unknown", { label: "Unknown craft", normalizedName: "whiskey", category: "spirit", location: "bar_shelf", confidence: 0.52, box: { x: 92, y: 16, w: 7, h: 64 }, accepted: false }),
+      d("bar-rum", { label: "Plantation Rum", normalizedName: "rum", category: "spirit", location: "bar_shelf", confidence: 0.86, box: { x: 5, y: 78, w: 12, h: 18 } }),
+      d("bar-mezcal", { label: "Del Maguey?", normalizedName: "mezcal", category: "spirit", location: "bar_shelf", confidence: 0.68, box: { x: 20, y: 78, w: 11, h: 18 } }),
     ],
   },
   {
@@ -59,6 +61,8 @@ export const SCENES: DemoScene[] = [
       d("fridge-mint", { label: "Mint?", normalizedName: "mint", category: "herb", location: "fridge", confidence: 0.58, box: { x: 38, y: 54, w: 14, h: 18 } }),
       d("fridge-avocado", { label: "Avocado", normalizedName: "avocado", category: "produce", location: "fridge", confidence: 0.72, box: { x: 56, y: 56, w: 14, h: 16 } }),
       d("fridge-leftovers", { label: "Leftovers", normalizedName: "chicken", category: "protein", location: "fridge", confidence: 0.46, box: { x: 74, y: 52, w: 22, h: 28 }, accepted: false }),
+      d("fridge-salmon", { label: "Salmon fillet", normalizedName: "salmon", category: "protein", location: "fridge", confidence: 0.81, box: { x: 4, y: 78, w: 30, h: 16 } }),
+      d("fridge-tofu", { label: "Tofu?", normalizedName: "tofu", category: "protein", location: "fridge", confidence: 0.62, box: { x: 40, y: 80, w: 18, h: 14 } }),
     ],
   },
   {

@@ -1,8 +1,8 @@
 import { RECIPES } from "./seed-recipes";
 import type { FlavorProfile, ProfileCoverage } from "./types";
 
-export const DATA_VERSION = "2026.08.19-curated-v10-npmi";
-export const LAST_REVIEWED = "2026-08-19";
+export const DATA_VERSION = "2026.08.20-curated-v11-npmi";
+export const LAST_REVIEWED = "2026-08-20";
 
 export const SYNERGY = { molecularMin: 0.25, coMin: 0.5, bonus: 0.08 } as const;
 
@@ -58,6 +58,11 @@ export const COMPOUND_NOTES: Record<string, string> = {
   "5-acetoxymethylfurfural": "Balsamic caramel",
   phenol: "Smoky phenolic",
   syringol: "Sweet smoke",
+  anethole: "Anise / licorice",
+  carvone: "Caraway / dill seed",
+  thymol: "Thyme phenolic",
+  cineole: "Eucalyptus / cardamom cool",
+  myristicin: "Nutmeg warm",
 };
 
 const ALIASES: Record<string, string> = {
@@ -71,6 +76,41 @@ const ALIASES: Record<string, string> = {
   gorgonzola: "blue cheese",
   roquefort: "blue cheese",
   stilton: "blue cheese",
+  // SEED 7 growth aliases
+  "elderflower": "elderflower",
+  "peychauds": "peychauds",
+  "ginger ale": "ginger ale",
+  "orange soda": "orange",
+  grapefruit: "grapefruit",
+  salmon: "salmon",
+  tofu: "tofu",
+  beef: "beef",
+  "goat cheese": "goat cheese",
+  dill: "dill",
+  rosemary: "rosemary",
+  thyme: "thyme",
+  kefir: "yogurt",
+  "roasted vegetables": "roasted vegetables",
+  "pickled onion": "onion",
+  quinoa: "quinoa",
+  couscous: "couscous",
+  cardamom: "cardamom",
+  nutmeg: "nutmeg",
+  "bay leaf": "bay leaf",
+  "star anise": "star anise",
+  gochujang: "gochujang",
+  sriracha: "sriracha",
+  almonds: "almonds",
+  cranberries: "cranberries",
+  "baking powder": "baking powder",
+  cocoa: "chocolate",
+  "apple cider vinegar": "apple cider vinegar",
+  panko: "panko",
+  porcini: "mushrooms",
+  "ice cream": "ice cream",
+  dough: "dough",
+  edamame: "edamame",
+  mushrooms: "mushrooms",
 };
 
 function canon(name: string): string { return ALIASES[name] ?? name; }
@@ -134,6 +174,34 @@ export const PROFILES: FlavorProfile[] = [
   p("balsamic", "Balsamic vinegar", "condiment", ["acetic acid", "furfural", "5-acetoxymethylfurfural"], "Aged sweet-sour vinegar.", "moderate"),
   p("blue cheese", "Blue cheese", "dairy", ["butyric acid", "2-heptanone", "methyl ketone"], "Pungent aged blue.", "moderate"),
   p("smoked paprika", "Smoked paprika", "condiment", ["guaiacol", "pyrazines", "phenol"], "Sweet smoke chile.", "sparse"),
+  // SEED 7 / v11 growth profiles
+  p("elderflower", "Elderflower", "spirit", ["linalool", "limonene", "beta-ionone"], "Floral-citrus liqueur.", "moderate"),
+  p("peychauds", "Peychaud's", "mixer", ["anethole", "eugenol", "cinnamaldehyde"], "Anise-forward New Orleans bitters.", "moderate"),
+  p("ginger ale", "Ginger ale", "mixer", ["gingerol", "zingerone", "citral", "carbon dioxide"], "Mild ginger sparkle.", "sparse"),
+  p("salmon", "Salmon", "protein", ["trimethylamine", "methional"], "Fatty fish, marine.", "sparse"),
+  p("tofu", "Tofu", "protein", ["methional", "hexanal"], "Neutral bean protein.", "sparse"),
+  p("beef", "Beef", "protein", ["methional", "pyrazines", "furfural"], "Savory roast meat.", "moderate"),
+  p("goat cheese", "Goat cheese", "dairy", ["butyric acid", "acetic acid"], "Tangy lactic goat.", "moderate"),
+  p("dill", "Dill", "herb", ["carvone", "limonene"], "Fresh anise-herb.", "sparse"),
+  p("rosemary", "Rosemary", "herb", ["alpha-pinene", "eugenol"], "Piney evergreen herb.", "moderate"),
+  p("thyme", "Thyme", "herb", ["thymol", "linalool"], "Earthy phenolic herb.", "moderate"),
+  p("quinoa", "Quinoa", "pantry", ["pyrazines", "hexanal"], "Nutty seed grain.", "sparse"),
+  p("couscous", "Couscous", "pantry", ["hexanal"], "Mild wheat pasta.", "sparse"),
+  p("cardamom", "Cardamom", "pantry", ["cineole", "linalool"], "Cool eucalyptus-spice.", "moderate"),
+  p("nutmeg", "Nutmeg", "pantry", ["myristicin", "eugenol"], "Warm baking spice.", "sparse"),
+  p("bay leaf", "Bay leaf", "pantry", ["eugenol", "linalool"], "Aromatic leaf.", "sparse"),
+  p("star anise", "Star anise", "pantry", ["anethole", "limonene"], "Licorice-star spice.", "sparse"),
+  p("gochujang", "Gochujang", "condiment", ["capsaicin", "glutamate", "furfural"], "Fermented chile-umami paste.", "moderate"),
+  p("sriracha", "Sriracha", "condiment", ["capsaicin", "acetic acid"], "Bright chile-garlic heat.", "sparse"),
+  p("almonds", "Almonds", "pantry", ["benzaldehyde", "pyrazines"], "Nutty stone-fruit.", "moderate"),
+  p("cranberries", "Cranberries", "pantry", ["benzaldehyde", "hexanal"], "Tart dried berry.", "sparse"),
+  p("apple cider vinegar", "Apple cider vinegar", "condiment", ["acetic acid", "hexanal"], "Bright fruit vinegar.", "sparse"),
+  p("panko", "Panko", "pantry", ["furfural", "pyrazines"], "Toasted breadcrumb.", "sparse"),
+  p("mushrooms", "Mushrooms", "produce", ["methional", "glutamate"], "Earthy umami fungi.", "moderate"),
+  p("ice cream", "Ice cream", "dairy", ["diacetyl", "vanillin", "delta-decalactone"], "Sweet dairy fat.", "sparse"),
+  p("dough", "Dough", "pantry", ["furfural", "hexanal"], "Raw wheat dough.", "sparse"),
+  p("edamame", "Edamame", "produce", ["hexanal", "methional"], "Fresh green soybean.", "sparse"),
+  p("roasted vegetables", "Roasted vegetables", "produce", ["pyrazines", "furfural", "guaiacol"], "Caramelized root and allium.", "moderate"),
 ].sort((a, b) => a.displayName.localeCompare(b.displayName));
 
 export function profileFor(name: string): FlavorProfile | undefined {
