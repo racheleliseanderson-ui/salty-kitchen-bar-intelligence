@@ -9,10 +9,10 @@ export const DEFAULT_APP_NAME = "Kitchen & Bar";
 
 export function escapeHtml(value) {
   return String(value)
-    .replaceAll("&", "&")
-    .replaceAll("<", "<")
-    .replaceAll(">", ">")
-    .replaceAll('"', """)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 }
 
