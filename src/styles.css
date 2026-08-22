@@ -38,6 +38,8 @@
   --color-brass-deep: var(--brass-deep);
   --color-oxblood: var(--oxblood);
   --color-bone: var(--bone);
+  --color-house-gold: var(--house-gold);
+  --color-house-gold-ink: var(--house-gold-ink);
   --color-pine: var(--pine);
   --color-live: var(--live);
 
@@ -114,6 +116,10 @@
   --pine: oklch(0.4 0.072 255);
   --brass: oklch(0.83 0.13 88);
   --brass-deep: oklch(0.66 0.115 85);
+  /* Northern Lantern House mark. House layer only: the Labs wordmark and
+     the Labs footer hairline. Never an app accent, never a CTA. */
+  --house-gold: #c8a34a;
+  --house-gold-ink: #dcbf7a;
   --oxblood: oklch(0.53 0.16 22);
   --bone: oklch(0.965 0.008 260);
   --live: oklch(0.8 0.1 195);
@@ -159,6 +165,8 @@
   --pine: oklch(0.865 0.03 258);
   --brass: oklch(0.545 0.11 80);
   --brass-deep: oklch(0.44 0.095 78);
+  --house-gold: #c8a34a;
+  --house-gold-ink: #6f5518;
   --oxblood: oklch(0.47 0.16 22);
   --bone: oklch(0.225 0.048 258);
   --live: oklch(0.5 0.09 208);
